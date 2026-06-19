@@ -1,0 +1,241 @@
+/* ==========================================
+   1. 高奢医疗科技（灰白空间）设计语言
+   ========================================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    /* 完美复刻图片中顶部明亮、四周微暗的奢华灰白渐变基调 */
+    --bg-main: #f4f6f8;
+    --bg-gradient: radial-gradient(circle at 50% 35%, #ffffff 0%, #e4e7eb 100%);
+    --primary-red: #ff3355;
+    --text-main: #11141a;       /* 纯净暗色，保证白底上的极致读写性 */
+    --text-muted: #6b778c;      /* 优雅雾霾蓝灰 */
+    --font-premium: 'PingFang SC', -apple-system, BlinkMacSystemFont, sans-serif;
+    --transition-silk: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: var(--font-premium);
+    background-color: var(--bg-main);
+    background-image: var(--bg-gradient);
+    background-attachment: fixed;
+    color: var(--text-main);
+    overflow-x: hidden;
+    letter-spacing: 0.3px;
+}
+
+/* Three.js 全屏粒子底层画布 */
+#bg-particle-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 0;
+    pointer-events: none; /* 穿透，绝不干扰上层 3D 心脏交互 */
+}
+
+/* ==========================================
+   2. 纯透明智能导航系统（维持上一版纯净结构）
+   ========================================== */
+/* ==========================================
+   2. 纯透明智能导航系统（已修正前缀排序警告）
+   ========================================== */
+.navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 6%;
+    z-index: 1000;
+    transition: var(--transition-silk);
+    
+    /* 极致透明，无任何背景色或分割线 */
+    background: transparent !important;
+    
+    /* 修复 Edge 警告：WebKit 前缀必须写在标准属性之前 */
+    -webkit-backdrop-filter: none !important; 
+    backdrop-filter: none !important;         
+    
+    border-bottom: none !important;
+}
+
+.navbar.navbar--hidden {
+    transform: translateY(-100%);
+    opacity: 0;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.logo-img {
+    width: 30px;
+    height: 30px;
+    object-fit: contain;
+}
+
+.logo-text {
+    font-size: 1.3rem;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    color: var(--text-main);
+}
+
+.nav-links {
+    display: flex;
+    list-style: none;
+    gap: 45px;
+}
+
+.nav-links li a {
+    text-decoration: none;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    transition: color 0.3s ease;
+    position: relative;
+}
+
+.nav-links li a:hover,
+.nav-links li a.active {
+    color: var(--text-main);
+    font-weight: 600;
+}
+
+.nav-links li a.active::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 4px;
+    background: var(--primary-red);
+    border-radius: 50%;
+}
+
+/* ==========================================
+   3. 右侧红髓丝滑指示系统（针对白底微调透明度）
+   ========================================== */
+.vertical-progress-bar {
+    position: fixed;
+    right: 5%;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 25px;
+}
+
+.progress-num {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    font-family: 'Courier New', monospace;
+}
+
+.track-line {
+    position: relative;
+    width: 1px;
+    height: 240px;
+    background: rgba(255, 51, 85, 0.12); /* 浅红底线 */
+}
+
+.active-progress-line {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 0%;
+    background: var(--primary-red);
+    transition: height 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dots-container {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 2;
+}
+
+.v-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: rgba(255, 51, 85, 0.25);
+    transition: var(--transition-silk);
+    display: block;
+}
+
+.v-dot:hover {
+    background: var(--text-main);
+    transform: scale(1.4);
+}
+
+.v-dot.active {
+    background: var(--primary-red);
+    transform: scale(1.6);
+    box-shadow: 0 2px 8px rgba(255, 51, 85, 0.4);
+}
+
+/* ==========================================
+   4. 分屏基础版面
+   ========================================== */
+.screen {
+    position: relative;
+    min-height: 100vh;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    padding: 0 6%;
+    background: transparent;
+    overflow: hidden;
+}
+
+footer {
+    height: 80px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    position: relative;
+    z-index: 10;
+}
+
+/* ==========================================
+   5. 全域响应式骨架断点
+   ========================================== */
+@media (max-width: 1024px) {
+    .navbar { padding: 0 40px; }
+    .vertical-progress-bar { right: 4%; }
+}
+
+@media (max-width: 768px) {
+    .navbar { height: 80px; padding: 0 24px; }
+    .nav-links, .vertical-progress-bar { display: none; }
+    .screen { padding: 0 24px; }
+}

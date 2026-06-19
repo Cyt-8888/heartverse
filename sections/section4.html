@@ -1,0 +1,1453 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HeartVerse · 健康策略引擎</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        /* ----- 全局重置 & 设计语言 ----- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: transparent;
+            color: #0f1115;
+            -webkit-font-smoothing: antialiased;
+        }
+        .engine-container {
+            width: 100%;
+            min-height: 100vh;
+            padding: 30px 2% 60px;
+            background: transparent;
+            display: flex;
+            flex-direction: column;
+            gap: 48px;
+        }
+
+        /* 标题区 */
+        .engine-header {
+            border-bottom: 2px solid #0f1115;
+            padding-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+        .engine-header .meta {
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            font-weight: 800;
+            color: #ff3355;
+            letter-spacing: 2px;
+        }
+        .engine-header h1 {
+            font-size: 1.85rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            margin: 6px 0 10px 0;
+        }
+        .engine-header .sub {
+            font-size: 1rem;
+            color: #444;
+            font-weight: 400;
+        }
+        .engine-header .risk-badge {
+            background: rgba(255,51,85,0.08);
+            padding: 8px 24px;
+            border-radius: 30px;
+            border: 1px solid rgba(255,51,85,0.2);
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+        }
+        .engine-header .risk-badge .label {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #444;
+        }
+        .engine-header .risk-badge .value {
+            font-size: 2.4rem;
+            font-weight: 900;
+            color: #ff3355;
+            line-height: 1;
+        }
+        .engine-header .risk-badge .unit {
+            font-size: 1rem;
+            font-weight: 800;
+            color: #ff3355;
+        }
+
+        /* 通用卡片样式 */
+        .strategy-card {
+            background: rgba(238, 240, 246, 0.6);
+            border: 1px solid rgba(15,17,21,0.06);
+            border-radius: 12px;
+            padding: 24px 28px;
+            transition: all 0.25s;
+        }
+        .strategy-card .card-title {
+            font-size: 1.1rem;
+            font-weight: 800;
+            letter-spacing: -0.3px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .strategy-card .card-title .badge {
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 2px 10px;
+            border-radius: 20px;
+            background: #0f1115;
+            color: #fff;
+            letter-spacing: 0.5px;
+        }
+        .strategy-card .card-title .badge.primary { background: #ff3355; }
+        .strategy-card .card-title .badge.green { background: #10ac84; }
+
+        /* 网格布局 */
+        .grid-2col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 28px;
+        }
+        .grid-3col {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+        .grid-4col {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+        .full-width { grid-column: 1 / -1; }
+
+        /* 图表容器 */
+        .chart-box {
+            width: 100%;
+            height: 280px;
+        }
+        .chart-box.tall { height: 340px; }
+        .chart-box.short { height: 200px; }
+
+        /* 问题发现列表 */
+        .issue-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .issue-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            padding: 14px 16px;
+            background: rgba(255,255,255,0.5);
+            border-radius: 8px;
+            border-left: 4px solid #ff3355;
+        }
+        .issue-item .priority {
+            font-weight: 800;
+            font-size: 0.75rem;
+            color: #ff3355;
+            min-width: 32px;
+        }
+        .issue-item .content {
+            flex: 1;
+        }
+        .issue-item .content .title {
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
+        .issue-item .content .desc {
+            font-size: 0.8rem;
+            color: #444;
+            margin-top: 2px;
+        }
+        .issue-item .content .tag {
+            display: inline-block;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 1px 8px;
+            border-radius: 12px;
+            margin-top: 4px;
+        }
+        .tag-high { background: rgba(255,51,85,0.12); color: #ff3355; }
+        .tag-mid { background: rgba(255,165,2,0.12); color: #cc7a00; }
+        .tag-low { background: rgba(16,172,132,0.12); color: #0e8a66; }
+
+        /* 行动方案卡片 */
+        .action-plan {
+            background: rgba(255,255,255,0.7);
+            border-radius: 8px;
+            padding: 16px 18px;
+            border: 1px solid rgba(15,17,21,0.04);
+            height: 100%;
+        }
+        .action-plan .plan-title {
+            font-weight: 800;
+            font-size: 0.95rem;
+            margin-bottom: 6px;
+        }
+        .action-plan .plan-tag {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #fff;
+            background: #0f1115;
+            padding: 1px 10px;
+            border-radius: 12px;
+            display: inline-block;
+            margin-bottom: 8px;
+        }
+        .action-plan ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .action-plan ul li {
+            font-size: 0.8rem;
+            padding: 4px 0 4px 20px;
+            position: relative;
+            color: #222;
+            line-height: 1.4;
+        }
+        .action-plan ul li::before {
+            content: "▸";
+            position: absolute;
+            left: 0;
+            color: #ff3355;
+            font-weight: 700;
+        }
+
+        /* 未来剧本 */
+        .scenario-group {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .scenario-item {
+            flex: 1;
+            min-width: 180px;
+            background: rgba(255,255,255,0.5);
+            border-radius: 8px;
+            padding: 16px 20px;
+            border-top: 4px solid #747d8c;
+            text-align: center;
+        }
+        .scenario-item .scenario-name {
+            font-weight: 800;
+            font-size: 0.9rem;
+            margin-bottom: 4px;
+        }
+        .scenario-item .scenario-prob {
+            font-size: 1.6rem;
+            font-weight: 900;
+            font-family: 'Courier New', monospace;
+        }
+        .scenario-item .scenario-path {
+            font-size: 0.7rem;
+            color: #747d8c;
+        }
+        .scenario-item.best { border-top-color: #10ac84; }
+        .scenario-item.worst { border-top-color: #ff3355; }
+        .scenario-item.current { border-top-color: #0f1115; }
+
+        /* 响应式 */
+        @media (max-width: 1024px) {
+            .grid-2col, .grid-3col, .grid-4col {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        @media (max-width: 768px) {
+            .grid-2col, .grid-3col, .grid-4col {
+                grid-template-columns: 1fr;
+            }
+            .engine-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+            .engine-header .risk-badge { align-self: flex-start; }
+            .strategy-card { padding: 16px; }
+        }
+    </style>
+</head>
+<body>
+<div class="engine-container">
+
+    <!-- ====== HEADER ====== -->
+    <header class="engine-header">
+        <div>
+            <div class="meta">健康策略引擎 · 从预测走向行动</div>
+            <h1>健康策略引擎 <span class="sub">From Prediction To Action</span></h1>
+        </div>
+        <div class="risk-badge">
+            <span class="label">当前风险</span>
+            <span class="value" id="header-risk">78</span>
+            <span class="unit">%</span>
+        </div>
+    </header>
+
+    <!-- ====== SECTION A: 风险结构总览 ====== -->
+    <section>
+        <div class="strategy-card">
+            <div class="card-title">风险结构总览 <span class="badge primary">风险构成</span></div>
+            <div class="grid-2col">
+                <div class="chart-box" id="chart-donut"></div>
+                <div>
+                    <div style="font-weight:700; font-size:0.95rem; margin-bottom:8px;">风险画像摘要</div>
+                    <div id="risk-profile-tags" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px;"></div>
+                    <div style="font-size:0.85rem; color:#444; line-height:1.6;" id="risk-profile-desc"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====== SECTION B: 健康问题发现中心 ====== -->
+    <section>
+        <div class="strategy-card">
+            <div class="card-title">健康问题发现中心 <span class="badge">优先级排序</span></div>
+            <div class="issue-list" id="issue-list-container"></div>
+        </div>
+    </section>
+
+    <!-- ====== SECTION C: 改善收益模拟器 ====== -->
+    <section>
+        <div class="strategy-card">
+            <div class="card-title">改善收益模拟器 <span class="badge green">影响模拟</span></div>
+            <div class="grid-2col">
+                <div class="chart-box tall" id="chart-impact"></div>
+                <div>
+                    <div style="font-weight:700; font-size:0.9rem; margin-bottom:8px;">调整目标值，查看风险变化</div>
+                    <div style="display:flex; flex-direction:column; gap:12px;" id="impact-controls">
+                        <!-- 由 JS 动态生成 -->
+                    </div>
+                    <div style="margin-top:12px; font-size:0.8rem; color:#747d8c;">
+                        * 拖动滑块模拟改善特定指标后风险的变化
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====== SECTION D: 个性化行动数据库 ====== -->
+    <section>
+        <div class="strategy-card">
+            <div class="card-title">个性化行动方案 <span class="badge">推荐引擎</span></div>
+            <div class="grid-3col" id="action-plans-container"></div>
+        </div>
+    </section>
+
+    <!-- ====== SECTION E: 数据驱动知识发现 ====== -->
+    <section>
+        <div class="strategy-card">
+            <div class="card-title">数据驱动知识发现 <span class="badge green">数据洞察</span></div>
+            <div class="grid-2col">
+                <div>
+                    <div class="chart-box short" id="chart-insight-age"></div>
+                    <div style="font-size:0.75rem; color:#444; margin-top:4px;">年龄分段患病率</div>
+                </div>
+                <div>
+                    <div class="chart-box short" id="chart-insight-oldpeak"></div>
+                    <div style="font-size:0.75rem; color:#444; margin-top:4px;">ST段压低与患病风险</div>
+                </div>
+                <div>
+                    <div class="chart-box short" id="chart-insight-hr"></div>
+                    <div style="font-size:0.75rem; color:#444; margin-top:4px;">最大心率与患病率</div>
+                </div>
+                <div>
+                    <div class="chart-box short" id="chart-insight-ca"></div>
+                    <div style="font-size:0.75rem; color:#444; margin-top:4px;">血管阻塞数与风险</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====== SECTION F: 未来风险剧本 ====== -->
+    <section>
+        <div class="strategy-card">
+            <div class="card-title">未来风险剧本 <span class="badge">场景推演</span></div>
+            <div class="scenario-group" id="scenario-container"></div>
+            <div style="margin-top:16px;">
+                <div class="chart-box" id="chart-scenario"></div>
+            </div>
+            <div style="font-size:0.8rem; color:#747d8c; text-align:center; margin-top:8px;">
+                今天的选择 · 决定未来的位置
+            </div>
+        </div>
+    </section>
+
+</div>
+
+<script>
+(function() {
+    // ================================================================
+    // 0. 中文特征名映射（贯穿全页）
+    // ================================================================
+    var FEATURE_CN = {
+        'age': '年龄',
+        'sex': '性别',
+        'cp': '胸痛类型',
+        'trestbps': '静息血压',
+        'chol': '胆固醇',
+        'fbs': '空腹血糖',
+        'restecg': '静息心电',
+        'thalach': '最大心率',
+        'exang': '运动心绞痛',
+        'oldpeak': 'ST段压低',
+        'slope': 'ST段斜率',
+        'ca': '血管阻塞数',
+        'thal': '血流分型'
+    };
+
+    // ================================================================
+    // 1. 内嵌完整数据集 (303条) + 统计量
+    // ================================================================
+    var RAW = [
+        [63,1,1,145,233,1,2,150,0,2.3,3,0,6,0],
+        [67,1,4,160,286,0,2,108,1,1.5,2,3,3,1],
+        [67,1,4,120,229,0,2,129,1,2.6,2,2,7,1],
+        [37,1,3,130,250,0,0,187,0,3.5,3,0,3,0],
+        [41,0,2,130,204,0,2,172,0,1.4,1,0,3,0],
+        [56,1,2,120,236,0,0,178,0,0.8,1,0,3,0],
+        [62,0,4,140,268,0,2,160,0,3.6,3,2,3,1],
+        [57,0,4,120,354,0,0,163,1,0.6,1,0,3,0],
+        [63,1,4,130,254,0,2,147,0,1.4,2,1,7,1],
+        [53,1,4,140,203,1,2,155,1,3.1,3,0,7,1],
+        [57,1,4,140,192,0,0,148,0,0.4,2,0,6,0],
+        [56,0,2,140,294,0,2,153,0,1.3,2,0,3,0],
+        [56,1,3,130,256,1,2,142,1,0.6,2,1,6,1],
+        [44,1,2,120,263,0,0,173,0,0,1,0,7,0],
+        [52,1,3,172,199,1,0,162,0,0.5,1,0,7,0],
+        [57,1,3,150,168,0,0,174,0,1.6,1,0,3,0],
+        [48,1,2,110,229,0,0,168,0,1,3,0,7,1],
+        [54,1,4,140,239,0,0,160,0,1.2,1,0,3,0],
+        [48,0,3,130,275,0,0,139,0,0.2,1,0,3,0],
+        [49,1,2,130,266,0,0,171,0,0.6,1,0,3,0],
+        [64,1,1,110,211,0,2,144,1,1.8,2,0,3,0],
+        [58,0,1,150,283,1,2,162,0,1,1,0,3,0],
+        [58,1,2,120,284,0,2,160,0,1.8,2,0,3,1],
+        [58,1,3,132,224,0,2,173,0,3.2,1,2,7,1],
+        [60,1,4,130,206,0,2,132,1,2.4,2,2,7,1],
+        [50,0,3,120,219,0,0,158,0,1.6,2,0,3,0],
+        [58,0,3,120,340,0,0,172,0,0,1,0,3,0],
+        [66,0,1,150,226,0,0,114,0,2.6,3,0,3,0],
+        [43,1,4,150,247,0,0,171,0,1.5,1,0,3,0],
+        [40,1,4,110,167,0,2,114,1,2,2,0,7,1],
+        [69,0,1,140,239,0,0,151,0,1.8,1,2,3,0],
+        [60,1,4,117,230,1,0,160,1,1.4,1,2,7,1],
+        [64,1,3,140,335,0,0,158,0,0,1,0,3,1],
+        [59,1,4,135,234,0,0,161,0,0.5,2,0,7,0],
+        [44,1,3,130,233,0,0,179,1,0.4,1,0,3,0],
+        [42,1,4,140,226,0,0,178,0,0,1,0,3,0],
+        [43,1,4,120,177,0,2,120,1,2.5,2,0,7,1],
+        [57,1,4,150,276,0,2,112,1,0.6,2,1,6,1],
+        [55,1,4,132,353,0,0,132,1,1.2,2,1,7,1],
+        [61,1,3,150,243,1,0,137,1,1,2,0,3,0],
+        [65,0,4,150,225,0,2,114,0,1,2,3,7,1],
+        [40,1,1,140,199,0,0,178,1,1.4,1,0,7,0],
+        [71,0,2,160,302,0,0,162,0,0.4,1,2,3,0],
+        [59,1,3,150,212,1,0,157,0,1.6,1,0,3,0],
+        [61,0,4,130,330,0,2,169,0,0,1,0,3,1],
+        [58,1,3,112,230,0,2,165,0,2.5,2,1,7,1],
+        [51,1,3,110,175,0,0,123,0,0.6,1,0,3,0],
+        [50,1,4,150,243,0,2,128,0,2.6,2,0,7,1],
+        [65,0,3,140,417,1,2,157,0,0.8,1,1,3,0],
+        [53,1,3,130,197,1,2,152,0,1.2,3,0,3,0],
+        [41,0,2,105,198,0,0,168,0,0,1,1,3,0],
+        [65,1,4,120,177,0,0,140,0,0.4,1,0,7,0],
+        [44,1,4,112,290,0,2,153,0,0,1,1,3,1],
+        [44,1,2,130,219,0,2,188,0,0,1,0,3,0],
+        [60,1,4,130,253,0,0,144,1,1.4,1,1,7,1],
+        [54,1,4,124,266,0,2,109,1,2.2,2,1,7,1],
+        [50,1,3,140,233,0,0,163,0,0.6,2,1,7,1],
+        [41,1,4,110,172,0,2,158,0,0,1,0,7,1],
+        [54,1,3,125,273,0,2,152,0,0.5,3,1,3,0],
+        [51,1,1,125,213,0,2,125,1,1.4,1,1,3,0],
+        [51,0,4,130,305,0,0,142,1,1.2,2,0,7,1],
+        [46,0,3,142,177,0,2,160,1,1.4,3,0,3,0],
+        [58,1,4,128,216,0,2,131,1,2.2,2,3,7,1],
+        [54,0,3,135,304,1,0,170,0,0,1,0,3,0],
+        [54,1,4,120,188,0,0,113,0,1.4,2,1,7,1],
+        [60,1,4,145,282,0,2,142,1,2.8,2,2,7,1],
+        [60,1,3,140,185,0,2,155,0,3,2,0,3,1],
+        [54,1,3,150,232,0,2,165,0,1.6,1,0,7,0],
+        [59,1,4,170,326,0,2,140,1,3.4,3,0,7,1],
+        [46,1,3,150,231,0,0,147,0,3.6,2,0,3,1],
+        [65,0,3,155,269,0,0,148,0,0.8,1,0,3,0],
+        [67,1,4,125,254,1,0,163,0,0.2,2,2,7,1],
+        [62,1,4,120,267,0,0,99,1,1.8,2,2,7,1],
+        [65,1,4,110,248,0,2,158,0,0.6,1,2,6,1],
+        [44,1,4,110,197,0,2,177,0,0,1,1,3,1],
+        [65,0,3,160,360,0,2,151,0,0.8,1,0,3,0],
+        [60,1,4,125,258,0,2,141,1,2.8,2,1,7,1],
+        [51,0,3,140,308,0,2,142,0,1.5,1,1,3,0],
+        [48,1,2,130,245,0,2,180,0,0.2,2,0,3,0],
+        [58,1,4,150,270,0,2,111,1,0.8,1,0,7,1],
+        [45,1,4,104,208,0,2,148,1,3,2,0,3,0],
+        [53,0,4,130,264,0,2,143,0,0.4,2,0,3,0],
+        [39,1,3,140,321,0,2,182,0,0,1,0,3,0],
+        [68,1,3,180,274,1,2,150,1,1.6,2,0,7,1],
+        [52,1,2,120,325,0,0,172,0,0.2,1,0,3,0],
+        [44,1,3,140,235,0,2,180,0,0,1,0,3,0],
+        [47,1,3,138,257,0,2,156,0,0,1,0,3,0],
+        [53,0,3,128,216,0,2,115,0,0,1,0,3,0],
+        [53,0,4,138,234,0,2,160,0,0,1,0,3,0],
+        [51,0,3,130,256,0,2,149,0,0.5,1,0,3,0],
+        [66,1,4,120,302,0,2,151,0,0.4,2,0,3,0],
+        [62,0,4,160,164,0,2,145,0,6.2,3,3,7,1],
+        [62,1,3,130,231,0,0,146,0,1.8,2,3,7,0],
+        [44,0,3,108,141,0,0,175,0,0.6,2,0,3,0],
+        [63,0,3,135,252,0,2,172,0,0,1,0,3,0],
+        [52,1,4,128,255,0,0,161,1,0,1,1,7,1],
+        [59,1,4,110,239,0,2,142,1,1.2,2,1,7,1],
+        [60,0,4,150,258,0,2,157,0,2.6,2,2,7,1],
+        [52,1,2,134,201,0,0,158,0,0.8,1,1,3,0],
+        [48,1,4,122,222,0,2,186,0,0,1,0,3,0],
+        [45,1,4,115,260,0,2,185,0,0,1,0,3,0],
+        [34,1,1,118,182,0,2,174,0,0,1,0,3,0],
+        [57,0,4,128,303,0,2,159,0,0,1,1,3,0],
+        [71,0,3,110,265,1,2,130,0,0,1,1,3,0],
+        [49,1,3,120,188,0,0,139,0,2,2,3,7,1],
+        [54,1,2,108,309,0,0,156,0,0,1,0,7,0],
+        [59,1,4,140,177,0,0,162,1,0,1,1,7,1],
+        [57,1,3,128,229,0,2,150,0,0.4,2,1,7,1],
+        [61,1,4,120,260,0,0,140,1,3.6,2,1,7,1],
+        [39,1,4,118,219,0,0,140,0,1.2,2,0,7,1],
+        [61,0,4,145,307,0,2,146,1,1,2,0,7,1],
+        [56,1,4,125,249,1,2,144,1,1.2,2,1,3,1],
+        [52,1,1,118,186,0,2,190,0,0,2,0,6,0],
+        [43,0,4,132,341,1,2,136,1,3,2,0,7,1],
+        [62,0,3,130,263,0,0,97,0,1.2,2,1,7,1],
+        [41,1,2,135,203,0,0,132,0,0,2,0,6,0],
+        [58,1,3,140,211,1,2,165,0,0,1,0,3,0],
+        [35,0,4,138,183,0,0,182,0,1.4,1,0,3,0],
+        [63,1,4,130,330,1,2,132,1,1.8,1,3,7,1],
+        [65,1,4,135,254,0,2,127,0,2.8,2,1,7,1],
+        [48,1,4,130,256,1,2,150,1,0,1,2,7,1],
+        [63,0,4,150,407,0,2,154,0,4,2,3,7,1],
+        [51,1,3,100,222,0,0,143,1,1.2,2,0,3,0],
+        [55,1,4,140,217,0,0,111,1,5.6,3,0,7,1],
+        [65,1,1,138,282,1,2,174,0,1.4,2,1,3,1],
+        [45,0,2,130,234,0,2,175,0,0.6,2,0,3,0],
+        [56,0,4,200,288,1,2,133,1,4,3,2,7,1],
+        [54,1,4,110,239,0,0,126,1,2.8,2,1,7,1],
+        [44,1,2,120,220,0,0,170,0,0,1,0,3,0],
+        [62,0,4,124,209,0,0,163,0,0,1,0,3,0],
+        [54,1,3,120,258,0,2,147,0,0.4,2,0,7,0],
+        [51,1,3,94,227,0,0,154,1,0,1,1,7,0],
+        [29,1,2,130,204,0,2,202,0,0,1,0,3,0],
+        [51,1,4,140,261,0,2,186,1,0,1,0,3,0],
+        [43,0,3,122,213,0,0,165,0,0.2,2,0,3,0],
+        [55,0,2,135,250,0,2,161,0,1.4,2,0,3,0],
+        [70,1,4,145,174,0,0,125,1,2.6,3,0,7,1],
+        [62,1,2,120,281,0,2,103,0,1.4,2,1,7,1],
+        [35,1,4,120,198,0,0,130,1,1.6,2,0,7,1],
+        [51,1,3,125,245,1,2,166,0,2.4,2,0,3,0],
+        [59,1,2,140,221,0,0,164,1,0,1,0,3,0],
+        [59,1,1,170,288,0,2,159,0,0.2,2,0,7,1],
+        [52,1,2,128,205,1,0,184,0,0,1,0,3,0],
+        [64,1,3,125,309,0,0,131,1,1.8,2,0,7,1],
+        [58,1,3,105,240,0,2,154,1,0.6,2,0,7,0],
+        [47,1,3,108,243,0,0,152,0,0,1,0,3,1],
+        [57,1,4,165,289,1,2,124,0,1,2,3,7,1],
+        [41,1,3,112,250,0,0,179,0,0,1,0,3,0],
+        [45,1,2,128,308,0,2,170,0,0,1,0,3,0],
+        [60,0,3,102,318,0,0,160,0,0,1,1,3,0],
+        [52,1,1,152,298,1,0,178,0,1.2,2,0,7,0],
+        [42,0,4,102,265,0,2,122,0,0.6,2,0,3,0],
+        [67,0,3,115,564,0,2,160,0,1.6,2,0,7,0],
+        [55,1,4,160,289,0,2,145,1,0.8,2,1,7,1],
+        [64,1,4,120,246,0,2,96,1,2.2,3,1,3,1],
+        [70,1,4,130,322,0,2,109,0,2.4,2,3,3,1],
+        [51,1,4,140,299,0,0,173,1,1.6,1,0,7,1],
+        [58,1,4,125,300,0,2,171,0,0,1,2,7,1],
+        [60,1,4,140,293,0,2,170,0,1.2,2,2,7,1],
+        [68,1,3,118,277,0,0,151,0,1,1,1,7,0],
+        [46,1,2,101,197,1,0,156,0,0,1,0,7,0],
+        [77,1,4,125,304,0,2,162,1,0,1,3,3,1],
+        [54,0,3,110,214,0,0,158,0,1.6,2,0,3,0],
+        [58,0,4,100,248,0,2,122,0,1,2,0,3,0],
+        [48,1,3,124,255,1,0,175,0,0,1,2,3,0],
+        [57,1,4,132,207,0,0,168,1,0,1,0,7,0],
+        [52,1,3,138,223,0,0,169,0,0,1,0,3,0],
+        [54,0,2,132,288,1,2,159,1,0,1,1,3,0],
+        [35,1,4,126,282,0,2,156,1,0,1,0,7,1],
+        [45,0,2,112,160,0,0,138,0,0,2,0,3,0],
+        [70,1,3,160,269,0,0,112,1,2.9,2,1,7,1],
+        [53,1,4,142,226,0,2,111,1,0,1,0,7,0],
+        [59,0,4,174,249,0,0,143,1,0,2,0,3,1],
+        [62,0,4,140,394,0,2,157,0,1.2,2,0,3,0],
+        [64,1,4,145,212,0,2,132,0,2,2,2,6,1],
+        [57,1,4,152,274,0,0,88,1,1.2,2,1,7,1],
+        [52,1,4,108,233,1,0,147,0,0.1,1,3,7,0],
+        [56,1,4,132,184,0,2,105,1,2.1,2,1,6,1],
+        [43,1,3,130,315,0,0,162,0,1.9,1,1,3,0],
+        [53,1,3,130,246,1,2,173,0,0,1,3,3,0],
+        [48,1,4,124,274,0,2,166,0,0.5,2,0,7,1],
+        [56,0,4,134,409,0,2,150,1,1.9,2,2,7,1],
+        [42,1,1,148,244,0,2,178,0,0.8,1,2,3,0],
+        [59,1,1,178,270,0,2,145,0,4.2,3,0,7,0],
+        [60,0,4,158,305,0,2,161,0,0,1,0,3,1],
+        [63,0,2,140,195,0,0,179,0,0,1,2,3,0],
+        [42,1,3,120,240,1,0,194,0,0.8,3,0,7,0],
+        [66,1,2,160,246,0,0,120,1,0,2,3,6,1],
+        [54,1,2,192,283,0,2,195,0,0,1,1,7,1],
+        [69,1,3,140,254,0,2,146,0,2,2,3,7,1],
+        [50,1,3,129,196,0,0,163,0,0,1,0,3,0],
+        [51,1,4,140,298,0,0,122,1,4.2,2,3,7,1],
+        [43,1,4,132,247,1,2,143,1,0.1,2,0,7,1],
+        [62,0,4,138,294,1,0,106,0,1.9,2,3,3,1],
+        [68,0,3,120,211,0,2,115,0,1.5,2,0,3,0],
+        [67,1,4,100,299,0,2,125,1,0.9,2,2,3,1],
+        [69,1,1,160,234,1,2,131,0,0.1,2,1,3,0],
+        [45,0,4,138,236,0,2,152,1,0.2,2,0,3,0],
+        [50,0,2,120,244,0,0,162,0,1.1,1,0,3,0],
+        [59,1,1,160,273,0,2,125,0,0,1,0,3,1],
+        [50,0,4,110,254,0,2,159,0,0,1,0,3,0],
+        [64,0,4,180,325,0,0,154,1,0,1,0,3,0],
+        [57,1,3,150,126,1,0,173,0,0.2,1,1,7,0],
+        [64,0,3,140,313,0,0,133,0,0.2,1,0,7,0],
+        [43,1,4,110,211,0,0,161,0,0,1,0,7,0],
+        [45,1,4,142,309,0,2,147,1,0,2,3,7,1],
+        [58,1,4,128,259,0,2,130,1,3,2,2,7,1],
+        [50,1,4,144,200,0,2,126,1,0.9,2,0,7,1],
+        [55,1,2,130,262,0,0,155,0,0,1,0,3,0],
+        [62,0,4,150,244,0,0,154,1,1.4,2,0,3,1],
+        [37,0,3,120,215,0,0,170,0,0,1,0,3,0],
+        [38,1,1,120,231,0,0,182,1,3.8,2,0,7,1],
+        [41,1,3,130,214,0,2,168,0,2,2,0,3,0],
+        [66,0,4,178,228,1,0,165,1,1,2,2,7,1],
+        [52,1,4,112,230,0,0,160,0,0,1,1,3,1],
+        [56,1,1,120,193,0,2,162,0,1.9,2,0,7,0],
+        [46,0,2,105,204,0,0,172,0,0,1,0,3,0],
+        [46,0,4,138,243,0,2,152,1,0,2,0,3,0],
+        [64,0,4,130,303,0,0,122,0,2,2,2,3,0],
+        [59,1,4,138,271,0,2,182,0,0,1,0,3,0],
+        [41,0,3,112,268,0,2,172,1,0,1,0,3,0],
+        [54,0,3,108,267,0,2,167,0,0,1,0,3,0],
+        [39,0,3,94,199,0,0,179,0,0,1,0,3,0],
+        [53,1,4,123,282,0,0,95,1,2,2,2,7,1],
+        [63,0,4,108,269,0,0,169,1,1.8,2,2,3,1],
+        [34,0,2,118,210,0,0,192,0,0.7,1,0,3,0],
+        [47,1,4,112,204,0,0,143,0,0.1,1,0,3,0],
+        [67,0,3,152,277,0,0,172,0,0,1,1,3,0],
+        [54,1,4,110,206,0,2,108,1,0,2,1,3,1],
+        [66,1,4,112,212,0,2,132,1,0.1,1,1,3,1],
+        [52,0,3,136,196,0,2,169,0,0.1,2,0,3,0],
+        [55,0,4,180,327,0,1,117,1,3.4,2,0,3,1],
+        [49,1,3,118,149,0,2,126,0,0.8,1,3,3,1],
+        [74,0,2,120,269,0,2,121,1,0.2,1,1,3,0],
+        [54,0,3,160,201,0,0,163,0,0,1,1,3,0],
+        [54,1,4,122,286,0,2,116,1,3.2,2,2,3,1],
+        [56,1,4,130,283,1,2,103,1,1.6,3,0,7,1],
+        [46,1,4,120,249,0,2,144,0,0.8,1,0,7,1],
+        [49,0,2,134,271,0,0,162,0,0,2,0,3,0],
+        [42,1,2,120,295,0,0,162,0,0,1,0,3,0],
+        [41,1,2,110,235,0,0,153,0,0,1,0,3,0],
+        [41,0,2,126,306,0,0,163,0,0,1,0,3,0],
+        [49,0,4,130,269,0,0,163,0,0,1,0,3,0],
+        [61,1,1,134,234,0,0,145,0,2.6,2,2,3,1],
+        [60,0,3,120,178,1,0,96,0,0,1,0,3,0],
+        [67,1,4,120,237,0,0,71,0,1,2,0,3,1],
+        [58,1,4,100,234,0,0,156,0,0.1,1,1,7,1],
+        [47,1,4,110,275,0,2,118,1,1,2,1,3,1],
+        [52,1,4,125,212,0,0,168,0,1,1,2,7,1],
+        [62,1,2,128,208,1,2,140,0,0,1,0,3,0],
+        [57,1,4,110,201,0,0,126,1,1.5,2,0,6,0],
+        [58,1,4,146,218,0,0,105,0,2,2,1,7,1],
+        [64,1,4,128,263,0,0,105,1,0.2,2,1,7,0],
+        [51,0,3,120,295,0,2,157,0,0.6,1,0,3,0],
+        [43,1,4,115,303,0,0,181,0,1.2,2,0,3,0],
+        [42,0,3,120,209,0,0,173,0,0,2,0,3,0],
+        [67,0,4,106,223,0,0,142,0,0.3,1,2,3,0],
+        [76,0,3,140,197,0,1,116,0,1.1,2,0,3,0],
+        [70,1,2,156,245,0,2,143,0,0,1,0,3,0],
+        [57,1,2,124,261,0,0,141,0,0.3,1,0,7,1],
+        [44,0,3,118,242,0,0,149,0,0.3,2,1,3,0],
+        [58,0,2,136,319,1,2,152,0,0,1,2,3,1],
+        [60,0,1,150,240,0,0,171,0,0.9,1,0,3,0],
+        [44,1,3,120,226,0,0,169,0,0,1,0,3,0],
+        [61,1,4,138,166,0,2,125,1,3.6,2,1,3,1],
+        [42,1,4,136,315,0,0,125,1,1.8,2,0,6,1],
+        [52,1,4,128,204,1,0,156,1,1,2,0,3,1],
+        [59,1,3,126,218,1,0,134,0,2.2,2,1,6,1],
+        [40,1,4,152,223,0,0,181,0,0,1,0,7,1],
+        [42,1,3,130,180,0,0,150,0,0,1,0,3,0],
+        [61,1,4,140,207,0,2,138,1,1.9,1,1,7,1],
+        [66,1,4,160,228,0,2,138,0,2.3,1,0,6,0],
+        [46,1,4,140,311,0,0,120,1,1.8,2,2,7,1],
+        [71,0,4,112,149,0,0,125,0,1.6,2,0,3,0],
+        [59,1,1,134,204,0,0,162,0,0.8,1,2,3,1],
+        [64,1,1,170,227,0,2,155,0,0.6,2,0,7,0],
+        [66,0,3,146,278,0,2,152,0,0,2,1,3,0],
+        [39,0,3,138,220,0,0,152,0,0,2,0,3,0],
+        [57,1,2,154,232,0,2,164,0,0,1,1,3,1],
+        [58,0,4,130,197,0,0,131,0,0.6,2,0,3,0],
+        [57,1,4,110,335,0,0,143,1,3,2,1,7,1],
+        [47,1,3,130,253,0,0,179,0,0,1,0,3,0],
+        [55,0,4,128,205,0,1,130,1,2,2,1,7,1],
+        [35,1,2,122,192,0,0,174,0,0,1,0,3,0],
+        [61,1,4,148,203,0,0,161,0,0,1,1,7,1],
+        [58,1,4,114,318,0,1,140,0,4.4,3,3,6,1],
+        [58,0,4,170,225,1,2,146,1,2.8,2,2,6,1],
+        [58,1,2,125,220,0,0,144,0,0.4,2,0,7,0],
+        [56,1,2,130,221,0,2,163,0,0,1,0,7,0],
+        [56,1,2,120,240,0,0,169,0,0,3,0,3,0],
+        [67,1,3,152,212,0,2,150,0,0.8,2,0,7,1],
+        [55,0,2,132,342,0,0,166,0,1.2,1,0,3,0],
+        [44,1,4,120,169,0,0,144,1,2.8,3,0,6,1],
+        [63,1,4,140,187,0,2,144,1,4,1,2,7,1],
+        [63,0,4,124,197,0,0,136,1,0,2,0,3,1],
+        [41,1,2,120,157,0,0,182,0,0,1,0,3,0],
+        [59,1,4,164,176,1,2,90,0,1,2,2,6,1],
+        [57,0,4,140,241,0,0,123,1,0.2,2,0,7,1],
+        [45,1,1,110,264,0,0,132,0,1.2,2,0,7,1],
+        [68,1,4,144,193,1,0,141,0,3.4,2,2,7,1],
+        [57,1,4,130,131,0,0,115,1,1.2,2,1,7,1],
+        [57,0,2,130,236,0,2,174,0,0,2,1,3,1],
+        [38,1,3,138,175,0,0,173,0,0,1,0,3,0]
+    ];
+
+    var FEATURES = ['age','sex','cp','trestbps','chol','fbs','restecg','thalach','exang','oldpeak','slope','ca','thal'];
+    var data = RAW.map(function(r) {
+        var obj = {};
+        FEATURES.forEach(function(f,i) { obj[f] = r[i]; });
+        obj.target = r[13];
+        return obj;
+    });
+
+    // 全局统计
+    var GLOBAL_MEAN = [54.55, 0.68, 3.15, 130.96, 249.84, 0.14, 0.98, 149.96, 0.33, 1.00, 1.59, 0.61, 4.71];
+    var GLOBAL_SCALE = [8.98, 0.47, 0.97, 17.59, 52.74, 0.35, 0.99, 22.64, 0.47, 1.12, 0.61, 0.88, 1.94];
+    var COEFF = [-0.1034, 0.6561, 0.5432, 0.3137, 0.2155, -0.2206, 0.2173, -0.3482, 0.3837, 0.1492, 0.3543, 1.1081, 0.6783];
+    var INTERCEPT = -0.0811;
+
+    // 健康/患病均值
+    var healthy = data.filter(function(d) { return d.target === 0; });
+    var patient = data.filter(function(d) { return d.target === 1; });
+    function meanArr(arr, key) {
+        var sum = 0;
+        for (var i = 0; i < arr.length; i++) {
+            sum += arr[i][key];
+        }
+        return sum / arr.length;
+    }
+    var healthyMean = {};
+    var patientMean = {};
+    FEATURES.forEach(function(f) {
+        healthyMean[f] = meanArr(healthy, f);
+        patientMean[f] = meanArr(patient, f);
+    });
+
+    // 风险计算
+    function calcRisk(inputs) {
+        var logit = INTERCEPT;
+        for (var i = 0; i < 13; i++) {
+            var val = inputs[FEATURES[i]];
+            var norm = (val - GLOBAL_MEAN[i]) / GLOBAL_SCALE[i];
+            logit += COEFF[i] * norm;
+        }
+        return 1 / (1 + Math.exp(-logit)) * 100;
+    }
+
+    // 获取 Section1 输入
+    function getInputs() {
+        var getVal = function(id, fallback) {
+            var el = document.getElementById(id);
+            if (el) {
+                var v = parseFloat(el.value);
+                return isNaN(v) ? fallback : v;
+            }
+            return fallback;
+        };
+        return {
+            age: getVal('input-age', 56),
+            sex: getVal('input-sex', 1),
+            cp: getVal('input-cp', 4),
+            trestbps: getVal('input-trestbps', 130),
+            chol: getVal('input-chol', 240),
+            fbs: getVal('input-fbs', 0),
+            restecg: getVal('input-restecg', 1),
+            thalach: getVal('input-thalach', 150),
+            exang: getVal('input-exang', 0),
+            oldpeak: getVal('input-oldpeak', 1.0),
+            slope: getVal('input-slope', 1),
+            ca: getVal('input-ca', 0),
+            thal: getVal('input-thal', 3)
+        };
+    }
+
+    // 计算归一化贡献（SHAP-like）
+    function computeContrib(inputs) {
+        var norm = FEATURES.map(function(f,i) {
+            return (inputs[f] - GLOBAL_MEAN[i]) / GLOBAL_SCALE[i];
+        });
+        var contrib = FEATURES.map(function(f,i) {
+            return { name: f, val: COEFF[i] * norm[i] };
+        });
+        return contrib;
+    }
+
+    // ================================================================
+    // 全局数据
+    var currentInputs = getInputs();
+    var currentRisk = calcRisk(currentInputs);
+    var currentContrib = computeContrib(currentInputs);
+
+    // ================================================================
+    // 2. 渲染引擎
+    // ================================================================
+    var PRIMARY = '#0f1115';
+    var RED = '#ff3355';
+    var GREEN = '#10ac84';
+    var GREY = '#747d8c';
+
+    var donutChart = null, impactChart = null, scenarioChart = null;
+    var insightCharts = [];
+
+    // ----- 2.1 风险结构总览 (环形图) - 全中文 -----
+    function renderDonut(contrib, risk) {
+        var dom = document.getElementById('chart-donut');
+        if (!dom) return;
+        if (!donutChart) donutChart = echarts.init(dom);
+        donutChart.resize();
+
+        var sorted = contrib.slice().sort(function(a, b) {
+            return Math.abs(b.val) - Math.abs(a.val);
+        });
+        var top5 = sorted.slice(0, 5);
+        var others = sorted.slice(5).reduce(function(s, c) {
+            return s + Math.abs(c.val);
+        }, 0);
+
+        // 映射为中文名
+        var data = top5.map(function(c) {
+            return { name: FEATURE_CN[c.name] || c.name, value: Math.abs(c.val) };
+        });
+        if (others > 0) {
+            data.push({ name: '其他', value: others });
+        }
+
+        var colorMap = {
+            '年龄': PRIMARY,
+            '最大心率': GREEN,
+            'ST段压低': RED,
+            '血管阻塞数': RED,
+            '胆固醇': '#d35400',
+            '静息血压': '#2980b9',
+            '其他': GREY
+        };
+        var colors = data.map(function(d) { return colorMap[d.name] || GREY; });
+
+        donutChart.setOption({
+            backgroundColor: 'transparent',
+            tooltip: {
+                trigger: 'item',
+                formatter: function(p) {
+                    return p.name + '<br/>贡献度: ' + p.percent + '%';
+                }
+            },
+            series: [{
+                type: 'pie',
+                radius: ['45%', '70%'],
+                avoidLabelOverlap: true,
+                itemStyle: { borderRadius: 6, borderColor: '#fff', borderWidth: 2 },
+                label: {
+                    show: true,
+                    formatter: '{b}\n{d}%',
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: PRIMARY
+                },
+                labelLine: { length: 12, length2: 16 },
+                data: data.map(function(d, i) {
+                    return { name: d.name, value: d.value, itemStyle: { color: colors[i] } };
+                })
+            }]
+        });
+    }
+
+    // ----- 2.2 风险画像摘要 -----
+    function renderProfile(contrib, inputs, risk) {
+        var tagsContainer = document.getElementById('risk-profile-tags');
+        var descContainer = document.getElementById('risk-profile-desc');
+        if (!tagsContainer || !descContainer) return;
+
+        var tags = [];
+        if (inputs.age > 60) tags.push({ label: '高龄风险', type: 'high' });
+        if (inputs.thalach < 130) tags.push({ label: '心肺储备下降', type: 'high' });
+        if (inputs.oldpeak > 2) tags.push({ label: '心肌缺血倾向', type: 'high' });
+        if (inputs.ca >= 1) tags.push({ label: '冠脉异常', type: 'high' });
+        if (inputs.chol > 240) tags.push({ label: '高胆固醇', type: 'mid' });
+        if (inputs.trestbps > 140) tags.push({ label: '血压偏高', type: 'mid' });
+        if (tags.length === 0) tags.push({ label: '目前无明显高危特征', type: 'low' });
+
+        tagsContainer.innerHTML = tags.map(function(t) {
+            var bg = t.type === 'high' ? 'rgba(255,51,85,0.12)' : (t.type === 'mid' ? 'rgba(255,165,2,0.12)' : 'rgba(16,172,132,0.12)');
+            var color = t.type === 'high' ? '#ff3355' : (t.type === 'mid' ? '#cc7a00' : '#0e8a66');
+            return '<span style="background:' + bg + '; color:' + color + '; padding:4px 14px; border-radius:20px; font-weight:700; font-size:0.8rem;">' + t.label + '</span>';
+        }).join('');
+
+        var sorted = contrib.slice().sort(function(a, b) {
+            return Math.abs(b.val) - Math.abs(a.val);
+        });
+        var top = sorted[0];
+        var topName = FEATURE_CN[top.name] || top.name;
+        var desc = '当前风险主要由 <strong>' + topName + '</strong> 驱动（贡献 ' + Math.abs(top.val).toFixed(1) + '%）。';
+        if (risk > 60) desc += ' 属于高风险人群，需积极干预。';
+        else if (risk > 40) desc += ' 属于中风险人群，建议改善生活方式。';
+        else desc += ' 属于低风险人群，维持良好习惯。';
+        descContainer.innerHTML = desc;
+    }
+
+    // ----- 2.3 健康问题发现中心 -----
+    function renderIssues(inputs, risk) {
+        var container = document.getElementById('issue-list-container');
+        if (!container) return;
+
+        var issues = [];
+        if (inputs.oldpeak > 2) {
+            issues.push({
+                priority: 1,
+                title: '心肌缺血风险',
+                desc: 'ST段压低 ' + inputs.oldpeak + 'mm，显著高于健康均值 (' + healthyMean.oldpeak.toFixed(2) + 'mm)，运动负荷下可能存在供血不足。',
+                tag: '高危',
+                tagType: 'high'
+            });
+        }
+        if (inputs.ca >= 1) {
+            issues.push({
+                priority: 2,
+                title: '冠状动脉异常',
+                desc: '发现 ' + inputs.ca + ' 支血管异常，与数据集中高危患者高度相似（高危组平均 ' + patientMean.ca.toFixed(1) + ' 支）。',
+                tag: '高危',
+                tagType: 'high'
+            });
+        }
+        if (inputs.thalach < 130) {
+            issues.push({
+                priority: 3,
+                title: '心肺耐力下降',
+                desc: '最大心率 ' + inputs.thalach + ' bpm，低于健康均值 (' + healthyMean.thalach.toFixed(0) + ' bpm)，运动耐受能力不足。',
+                tag: '中危',
+                tagType: 'mid'
+            });
+        }
+        if (inputs.age > 60) {
+            issues.push({
+                priority: 4,
+                title: '年龄相关退行性变',
+                desc: '年龄 ' + inputs.age + ' 岁，为不可逆风险因素，建议加强心血管保护。',
+                tag: '中危',
+                tagType: 'mid'
+            });
+        }
+        if (inputs.chol > 240) {
+            issues.push({
+                priority: 5,
+                title: '高胆固醇血症',
+                desc: '总胆固醇 ' + inputs.chol + ' mg/dl，高于正常上限，建议饮食调整。',
+                tag: '低危',
+                tagType: 'low'
+            });
+        }
+        if (issues.length === 0) {
+            container.innerHTML = '<div style="padding:20px; text-align:center; color:#10ac84; font-weight:700;">未发现显著临床问题，请继续保持健康生活方式</div>';
+            return;
+        }
+
+        container.innerHTML = issues.map(function(issue) {
+            return '<div class="issue-item">' +
+                '<div class="priority">#' + issue.priority + '</div>' +
+                '<div class="content">' +
+                '<div class="title">' + issue.title + '</div>' +
+                '<div class="desc">' + issue.desc + '</div>' +
+                '<span class="tag tag-' + issue.tagType + '">' + issue.tag + '</span>' +
+                '</div></div>';
+        }).join('');
+    }
+
+    // ----- 2.4 改善收益模拟器 (全中文标签) -----
+    function renderImpactControls(inputs, risk) {
+        var container = document.getElementById('impact-controls');
+        if (!container) return;
+
+        var targets = [
+            { key: 'oldpeak', label: 'ST段压低', min: 0, max: 4, step: 0.1, current: inputs.oldpeak, unit: 'mm' },
+            { key: 'ca', label: '冠脉阻塞血管', min: 0, max: 3, step: 1, current: inputs.ca, unit: '支' },
+            { key: 'thalach', label: '最大心率', min: 70, max: 200, step: 1, current: inputs.thalach, unit: 'bpm' },
+            { key: 'chol', label: '总胆固醇', min: 150, max: 400, step: 5, current: inputs.chol, unit: 'mg/dl' },
+            { key: 'trestbps', label: '静息血压', min: 90, max: 200, step: 2, current: inputs.trestbps, unit: 'mmHg' }
+        ];
+
+        container.innerHTML = targets.map(function(t) {
+            return '<div style="display:flex; flex-direction:column; gap:2px;">' +
+                '<div style="display:flex; justify-content:space-between; font-size:0.78rem; font-weight:600;">' +
+                '<span>' + t.label + '</span>' +
+                '<span><span id="impact-val-' + t.key + '">' + t.current + '</span> ' + t.unit + '</span>' +
+                '</div>' +
+                '<input type="range" id="impact-slider-' + t.key + '" min="' + t.min + '" max="' + t.max + '" step="' + t.step + '" value="' + t.current + '" style="width:100%;">' +
+                '</div>';
+        }).join('');
+
+        targets.forEach(function(t) {
+            var slider = document.getElementById('impact-slider-' + t.key);
+            var valSpan = document.getElementById('impact-val-' + t.key);
+            if (slider) {
+                slider.addEventListener('input', function() {
+                    valSpan.textContent = this.value;
+                    updateImpactChart();
+                });
+            }
+        });
+    }
+
+    function updateImpactChart() {
+        var inputs = getInputs();
+        var sliders = ['oldpeak', 'ca', 'thalach', 'chol', 'trestbps'];
+        var newInputs = {};
+        for (var key in inputs) {
+            if (inputs.hasOwnProperty(key)) {
+                newInputs[key] = inputs[key];
+            }
+        }
+        sliders.forEach(function(key) {
+            var el = document.getElementById('impact-slider-' + key);
+            if (el) newInputs[key] = parseFloat(el.value);
+        });
+
+        var dom = document.getElementById('chart-impact');
+        if (!dom) return;
+        if (!impactChart) impactChart = echarts.init(dom);
+        impactChart.resize();
+
+        var baseRisk = calcRisk(inputs);
+        var improvements = [];
+        sliders.forEach(function(key) {
+            var sliderEl = document.getElementById('impact-slider-' + key);
+            var targetVal = sliderEl ? parseFloat(sliderEl.value) : inputs[key];
+            var testInputs = {};
+            for (var k in inputs) {
+                if (inputs.hasOwnProperty(k)) {
+                    testInputs[k] = inputs[k];
+                }
+            }
+            testInputs[key] = targetVal;
+            var riskAfter = calcRisk(testInputs);
+            improvements.push({
+                name: FEATURE_CN[key] || key,
+                key: key,
+                current: inputs[key],
+                target: targetVal,
+                riskReduction: baseRisk - riskAfter
+            });
+        });
+        improvements.sort(function(a, b) {
+            return b.riskReduction - a.riskReduction;
+        });
+
+        var names = improvements.map(function(i) { return i.name; });
+        var currentRisk = baseRisk;
+
+        var waterfallData = [{ name: '当前风险', value: currentRisk }];
+        var cum = currentRisk;
+        improvements.forEach(function(item) {
+            cum -= item.riskReduction;
+            waterfallData.push({ name: '↓' + item.name, value: cum });
+        });
+
+        impactChart.setOption({
+            backgroundColor: 'transparent',
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: { type: 'shadow' },
+                formatter: function(params) {
+                    var p = params[0];
+                    var idx = p.dataIndex;
+                    if (idx === 0) return '当前风险: ' + p.value.toFixed(1) + '%';
+                    var item = improvements[idx - 1];
+                    return item.name + ' 改善至 ' + item.target + ' <br/>风险降至 ' + p.value.toFixed(1) + '% (↓' + item.riskReduction.toFixed(1) + '%)';
+                }
+            },
+            grid: { left: '10%', right: '6%', top: '8%', bottom: '12%', containLabel: true },
+            xAxis: {
+                type: 'category',
+                data: waterfallData.map(function(d) { return d.name; }),
+                axisLabel: { fontSize: 10, fontWeight: 700, color: PRIMARY }
+            },
+            yAxis: {
+                type: 'value',
+                min: 0,
+                max: 100,
+                axisLabel: { formatter: '{value}%', color: PRIMARY, fontWeight: 700 },
+                splitLine: { lineStyle: { color: 'rgba(0,0,0,0.05)' } }
+            },
+            series: [{
+                type: 'bar',
+                data: waterfallData.map(function(d, idx) {
+                    return {
+                        value: d.value,
+                        itemStyle: {
+                            color: idx === 0 ? PRIMARY : (idx === waterfallData.length - 1 ? GREEN : RED)
+                        }
+                    };
+                }),
+                barWidth: 30,
+                label: {
+                    show: true,
+                    position: 'top',
+                    formatter: function(p) { return p.value.toFixed(1) + '%'; },
+                    color: PRIMARY,
+                    fontWeight: 700,
+                    fontSize: 10
+                }
+            }]
+        });
+    }
+
+    // ----- 2.5 个性化行动数据库 (Recommendation Engine) -----
+    function renderActions(inputs) {
+        var container = document.getElementById('action-plans-container');
+        if (!container) return;
+
+        var db = {
+            age: {
+                condition: inputs.age > 60,
+                title: '心血管老化管理',
+                tag: '年龄管理',
+                strategies: [
+                    '控制血压波动，保持收缩压 < 130 mmHg',
+                    '定期监测血脂谱（每半年一次）',
+                    '每周 150 分钟中等强度有氧运动'
+                ]
+            },
+            thalach: {
+                condition: inputs.thalach < 130,
+                title: '心肺功能提升计划',
+                tag: '心肺康复',
+                strategies: [
+                    '每周至少 150 分钟快走或骑行',
+                    '靶心率区间为 (220-年龄)×60%~70%',
+                    '逐步增加运动强度，避免过度疲劳'
+                ]
+            },
+            chol: {
+                condition: inputs.chol > 240,
+                title: '血脂优化计划',
+                tag: '营养干预',
+                strategies: [
+                    '减少饱和脂肪和反式脂肪摄入',
+                    '每日摄入 25-30g 膳食纤维（蔬菜、全谷物）',
+                    '控制精制糖和酒精摄入'
+                ]
+            },
+            oldpeak: {
+                condition: inputs.oldpeak > 2,
+                title: '心肌供血改善计划',
+                tag: '医疗关注',
+                strategies: [
+                    '避免高强度、爆发性运动',
+                    '保证充足睡眠，避免熬夜',
+                    '遵医嘱进行必要的心血管影像学复查'
+                ]
+            },
+            ca: {
+                condition: inputs.ca >= 1,
+                title: '冠脉健康管理计划',
+                tag: '专科干预',
+                strategies: [
+                    '心内科专科门诊评估斑块稳定性',
+                    '严格控制血压、血脂、血糖',
+                    '遵医嘱启用抗血小板治疗'
+                ]
+            }
+        };
+
+        var activePlans = [];
+        for (var key in db) {
+            if (db.hasOwnProperty(key) && db[key].condition) {
+                activePlans.push(db[key]);
+            }
+        }
+
+        if (activePlans.length === 0) {
+            container.innerHTML = '<div class="full-width" style="text-align:center; padding:20px; color:#10ac84; font-weight:700;">当前无需特殊干预，继续健康生活方式</div>';
+            return;
+        }
+
+        container.innerHTML = activePlans.map(function(p) {
+            return '<div class="action-plan">' +
+                '<div class="plan-tag">' + p.tag + '</div>' +
+                '<div class="plan-title">' + p.title + '</div>' +
+                '<ul>' +
+                p.strategies.map(function(s) { return '<li>' + s + '</li>'; }).join('') +
+                '</ul></div>';
+        }).join('');
+    }
+
+    // ----- 2.6 数据驱动知识发现 (4个小图) -----
+    function renderInsights() {
+        var ageGroups = ['<45', '45-55', '55-65', '>65'];
+        var ageRates = ageGroups.map(function(g) {
+            var parts = g.includes('<') ? [0, 45] : g.includes('>') ? [65, 200] : g.split('-').map(Number);
+            var min = parts[0], max = parts[1];
+            var subset = data.filter(function(d) { return d.age >= min && d.age < max; });
+            if (subset.length === 0) return 0;
+            return subset.filter(function(d) { return d.target === 1; }).length / subset.length * 100;
+        });
+
+        var oldpeakGroups = ['<0.5', '0.5-1.5', '1.5-2.5', '>2.5'];
+        var oldpeakRates = oldpeakGroups.map(function(g) {
+            var parts = g.includes('<') ? [0, 0.5] : g.includes('>') ? [2.5, 10] : g.split('-').map(Number);
+            var min = parts[0], max = parts[1];
+            var subset = data.filter(function(d) { return d.oldpeak >= min && d.oldpeak < max; });
+            if (subset.length === 0) return 0;
+            return subset.filter(function(d) { return d.target === 1; }).length / subset.length * 100;
+        });
+
+        var hrGroups = ['<120', '120-140', '140-160', '>160'];
+        var hrRates = hrGroups.map(function(g) {
+            var parts = g.includes('<') ? [0, 120] : g.includes('>') ? [160, 300] : g.split('-').map(Number);
+            var min = parts[0], max = parts[1];
+            var subset = data.filter(function(d) { return d.thalach >= min && d.thalach < max; });
+            if (subset.length === 0) return 0;
+            return subset.filter(function(d) { return d.target === 1; }).length / subset.length * 100;
+        });
+
+        var caGroups = ['0', '1', '2', '3'];
+        var caRates = caGroups.map(function(c) {
+            var val = parseInt(c);
+            var subset = data.filter(function(d) { return d.ca === val; });
+            if (subset.length === 0) return 0;
+            return subset.filter(function(d) { return d.target === 1; }).length / subset.length * 100;
+        });
+
+        var charts = [
+            { id: 'chart-insight-age', data: ageRates, xData: ageGroups, color: PRIMARY },
+            { id: 'chart-insight-oldpeak', data: oldpeakRates, xData: oldpeakGroups, color: RED },
+            { id: 'chart-insight-hr', data: hrRates, xData: hrGroups, color: GREEN },
+            { id: 'chart-insight-ca', data: caRates, xData: caGroups, color: '#d35400' }
+        ];
+
+        charts.forEach(function(cfg, idx) {
+            var dom = document.getElementById(cfg.id);
+            if (!dom) return;
+            var chart = insightCharts[idx];
+            if (!chart) {
+                chart = echarts.init(dom);
+                insightCharts[idx] = chart;
+            }
+            chart.resize();
+            chart.setOption({
+                backgroundColor: 'transparent',
+                grid: { left: '10%', right: '8%', top: '12%', bottom: '12%', containLabel: true },
+                xAxis: {
+                    type: 'category',
+                    data: cfg.xData,
+                    axisLabel: { fontSize: 9, fontWeight: 700, color: PRIMARY },
+                    axisLine: { lineStyle: { color: PRIMARY } }
+                },
+                yAxis: {
+                    type: 'value',
+                    min: 0,
+                    max: 100,
+                    axisLabel: { fontSize: 8, color: PRIMARY },
+                    splitLine: { lineStyle: { color: 'rgba(0,0,0,0.05)' } }
+                },
+                series: [{
+                    type: 'bar',
+                    data: cfg.data.map(function(v) {
+                        return {
+                            value: v,
+                            itemStyle: { color: cfg.color, borderRadius: [2, 2, 0, 0] }
+                        };
+                    }),
+                    barWidth: '50%',
+                    label: {
+                        show: true,
+                        position: 'top',
+                        formatter: function(p) { return p.value.toFixed(1) + '%'; },
+                        fontSize: 8,
+                        color: PRIMARY,
+                        fontWeight: 700
+                    }
+                }]
+            });
+        });
+    }
+
+    // ----- 2.7 未来风险剧本 -----
+    function renderScenario(inputs, risk) {
+        var baseline = risk;
+        var pathA = [];
+        var pathB = [];
+        var pathC = [];
+        var steps = 5;
+        for (var i = 0; i < steps; i++) {
+            pathA.push(Math.min(98, baseline + i * 2.5));
+            var bVal = baseline - 15 * Math.exp(-i / 1.5) + i * 1.2;
+            pathB.push(Math.max(10, Math.min(95, bVal)));
+            var cVal = baseline - 20 * (1 - Math.exp(-i / 1.2));
+            pathC.push(Math.max(5, Math.min(90, cVal)));
+        }
+
+        var container = document.getElementById('scenario-container');
+        if (container) {
+            container.innerHTML =
+                '<div class="scenario-item worst">' +
+                '<div class="scenario-name">保持现状</div>' +
+                '<div class="scenario-prob">' + pathA[pathA.length - 1].toFixed(0) + '%</div>' +
+                '<div class="scenario-path">5 年后风险</div></div>' +
+                '<div class="scenario-item current">' +
+                '<div class="scenario-name">核心干预</div>' +
+                '<div class="scenario-prob">' + pathB[pathB.length - 1].toFixed(0) + '%</div>' +
+                '<div class="scenario-path">5 年后风险</div></div>' +
+                '<div class="scenario-item best">' +
+                '<div class="scenario-name">全面改善</div>' +
+                '<div class="scenario-prob">' + pathC[pathC.length - 1].toFixed(0) + '%</div>' +
+                '<div class="scenario-path">5 年后风险</div></div>';
+        }
+
+        var dom = document.getElementById('chart-scenario');
+        if (!dom) return;
+        if (!scenarioChart) scenarioChart = echarts.init(dom);
+        scenarioChart.resize();
+
+        var times = ['现在', '2年', '4年', '6年', '8年', '10年'];
+        scenarioChart.setOption({
+            backgroundColor: 'transparent',
+            tooltip: {
+                trigger: 'axis',
+                backgroundColor: PRIMARY,
+                textStyle: { color: '#fff' },
+                formatter: function(params) {
+                    var html = '<b>' + params[0].axisValue + '</b><br/>';
+                    params.forEach(function(p) {
+                        html += p.marker + ' ' + p.seriesName + ': ' + p.value.toFixed(1) + '%<br/>';
+                    });
+                    return html;
+                }
+            },
+            legend: {
+                data: ['保持现状', '核心干预', '全面改善'],
+                textStyle: { color: PRIMARY, fontWeight: 700, fontSize: 11 },
+                top: 0
+            },
+            grid: { left: '8%', right: '6%', top: '18%', bottom: '12%', containLabel: true },
+            xAxis: {
+                type: 'category',
+                data: times,
+                axisLabel: { color: PRIMARY, fontWeight: 700 },
+                axisLine: { lineStyle: { color: PRIMARY } }
+            },
+            yAxis: {
+                type: 'value',
+                min: 0,
+                max: 100,
+                axisLabel: { formatter: '{value}%', color: PRIMARY, fontWeight: 700 },
+                splitLine: { lineStyle: { color: 'rgba(0,0,0,0.05)' } }
+            },
+            series: [
+                {
+                    name: '保持现状',
+                    type: 'line',
+                    smooth: true,
+                    data: [baseline].concat(pathA),
+                    lineStyle: { width: 3, color: RED },
+                    symbol: 'circle',
+                    symbolSize: 6,
+                    itemStyle: { color: RED }
+                },
+                {
+                    name: '核心干预',
+                    type: 'line',
+                    smooth: true,
+                    data: [baseline].concat(pathB),
+                    lineStyle: { width: 3, color: '#ffa502' },
+                    symbol: 'diamond',
+                    symbolSize: 8,
+                    itemStyle: { color: '#ffa502' }
+                },
+                {
+                    name: '全面改善',
+                    type: 'line',
+                    smooth: true,
+                    data: [baseline].concat(pathC),
+                    lineStyle: { width: 3, color: GREEN },
+                    symbol: 'circle',
+                    symbolSize: 6,
+                    itemStyle: { color: GREEN }
+                }
+            ]
+        });
+    }
+
+    // ================================================================
+    // 3. 全局刷新
+    // ================================================================
+    function refreshAll(force) {
+        if (force === undefined) force = false;
+        var inputs = getInputs();
+        if (!force && currentInputs) {
+            var same = true;
+            for (var f = 0; f < FEATURES.length; f++) {
+                var key = FEATURES[f];
+                if (inputs[key] !== currentInputs[key]) {
+                    same = false;
+                    break;
+                }
+            }
+            if (same) return;
+        }
+        currentInputs = {};
+        for (var k = 0; k < FEATURES.length; k++) {
+            currentInputs[FEATURES[k]] = inputs[FEATURES[k]];
+        }
+        currentRisk = calcRisk(inputs);
+        currentContrib = computeContrib(inputs);
+
+        document.getElementById('header-risk').textContent = Math.round(currentRisk);
+
+        renderDonut(currentContrib, currentRisk);
+        renderProfile(currentContrib, inputs, currentRisk);
+        renderIssues(inputs, currentRisk);
+        renderImpactControls(inputs, currentRisk);
+        updateImpactChart();
+        renderActions(inputs);
+        renderInsights();
+        renderScenario(inputs, currentRisk);
+    }
+
+    // ================================================================
+    // 4. 初始化 & 事件绑定
+    // ================================================================
+    function init() {
+        refreshAll(true);
+
+        setInterval(function() { refreshAll(false); }, 400);
+
+        window.addEventListener('resize', function() {
+            if (donutChart) donutChart.resize();
+            if (impactChart) impactChart.resize();
+            if (scenarioChart) scenarioChart.resize();
+            insightCharts.forEach(function(c) { if (c) c.resize(); });
+        });
+    }
+
+    if (window.echarts) {
+        init();
+    } else {
+        var timer = setInterval(function() {
+            if (window.echarts) {
+                clearInterval(timer);
+                init();
+            }
+        }, 30);
+    }
+
+})();
+</script>
+</body>
+</html>

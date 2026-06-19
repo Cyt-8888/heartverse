@@ -1,0 +1,298 @@
+<div class="premium-home-layout">
+    
+    <div class="hero-text-left-zone">
+        <h4 class="meta-tag">DIGITAL TWIN LABS — 心血管健康数字孪生系统</h4>
+        
+        <h1 class="main-title">
+            解构生命律动<br>
+            遇见健康的<span class="red-key">数字孪生</span>
+        </h1>
+        
+        <div class="accent-bar"></div>
+        
+        <p class="body-text">
+            依托前沿人工智能与全维信息可视化矩阵，我们在数字虚空中映射真实的生命脉动。通过高精风险预测模型、实时数据交互解译与病理演进分析，打破医疗信息壁垒，邀您一同洞察健康风险从微观积聚到宏观映射的完整全景。
+        </p>
+        
+        <div class="cta-wrapper">
+            <a href="#section1" class="explore-trigger">
+                <span class="trigger-label">开启数据解译</span>
+                <span class="trigger-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                </span>
+            </a>
+        </div>
+    </div>
+
+    <div class="hero-3d-right-zone">
+        <model-viewer 
+            src="realistic_human_heart/scene.gltf" 
+            alt="人类心脏高精数字孪生体" 
+            auto-rotate 
+            camera-controls 
+            interaction-prompt="none"
+            shadow-intensity="0" 
+            exposure="1.25"
+            camera-orbit="0deg 75deg 100%"
+            min-camera-orbit="auto auto 30%"
+            max-camera-orbit="auto auto 200%"
+            disable-tap
+            loading="eager">
+        </model-viewer>
+    </div>
+
+    <div class="cinematic-mouse-guide">
+        <div class="guide-text-group">
+            <span class="guide-num"></span>
+            <span class="guide-text">纵向滑动 步入数智视界</span>
+        </div>
+        <div class="interactive-mouse-icon">
+            <div class="scroll-wheel-line"></div>
+        </div>
+    </div>
+
+</div>
+
+<style>
+    .premium-home-layout {
+        position: relative;
+        width: 100%;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: transparent;
+    }
+
+    /* ==========================================
+       空间占比：右半部分 3D 模型舞台区
+       ========================================== */
+    .hero-3d-right-zone {
+        position: absolute;
+        top: 0;
+        right: -5%; 
+        width: 54vw; 
+        height: 100vh;
+        z-index: 1;
+        pointer-events: auto;
+    }
+
+    .hero-3d-right-zone model-viewer {
+        width: 100%;
+        height: 100%;
+        background-color: transparent; 
+        outline: none;
+    }
+
+    /* ==========================================
+       左半部分：电影感全中文文本排版体系
+       ========================================== */
+    .hero-text-left-zone {
+        position: relative;
+        z-index: 2;
+        max-width: 620px;
+        pointer-events: none;
+    }
+
+    .hero-text-left-zone a,
+    .hero-text-left-zone p {
+        pointer-events: auto;
+    }
+
+    .hero-text-left-zone .meta-tag {
+        color: #ff3355;
+        font-size: 0.8rem;
+        letter-spacing: 4px; 
+        font-weight: 700;
+        margin-bottom: 28px;
+        opacity: 0.85;
+    }
+
+    .hero-text-left-zone .main-title {
+        font-size: 3.8rem;
+        font-weight: 200; 
+        line-height: 1.4;
+        color: #11141a; 
+        margin-bottom: 30px;
+        letter-spacing: 1px;
+    }
+
+    .hero-text-left-zone .red-key {
+        color: #ff3355;
+        font-weight: 500; 
+    }
+
+    .hero-text-left-zone .accent-bar {
+        width: 60px;
+        height: 1px;
+        background: linear-gradient(to right, #ff3355, transparent);
+        margin-bottom: 35px;
+    }
+
+    .hero-text-left-zone .body-text {
+        font-size: 0.98rem;
+        line-height: 2.2; 
+        color: #4a5568; 
+        margin-bottom: 50px;
+        text-align: justify;
+        opacity: 0.9;
+    }
+
+    /* 数据解译探索按钮 */
+    .explore-trigger {
+        display: inline-flex;
+        align-items: center;
+        gap: 18px;
+        text-decoration: none;
+        color: #11141a;
+        font-weight: 600;
+        font-size: 0.95rem;
+        letter-spacing: 1.5px;
+    }
+
+    .explore-trigger .trigger-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        background: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.04);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.03);
+        transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .explore-trigger svg {
+        width: 16px;
+        height: 16px;
+        transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .explore-trigger:hover .trigger-icon {
+        background: #ff3355;
+        color: #ffffff;
+        transform: scale(1.05) translateX(6px);
+        border-color: #ff3355;
+        box-shadow: 0 8px 25px rgba(255, 51, 85, 0.3);
+    }
+
+    /* ==========================================
+       【重构核心】：文字左 + 动态鼠标滚轮右 横向引导系统
+       ========================================== */
+    .cinematic-mouse-guide {
+        position: absolute;
+        bottom: 55px;
+        left: 0;
+        z-index: 3;
+        display: flex;
+        flex-direction: row; /* 完美的左右横向排版 */
+        align-items: center;
+        gap: 20px; /* 文字与鼠标之间的黄金安全距离 */
+    }
+
+    .guide-text-group {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .guide-num {
+        font-family: 'Courier New', monospace;
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: #ff3355;
+        letter-spacing: 1px;
+    }
+
+    .guide-text {
+        font-size: 0.76rem;
+        letter-spacing: 3px; /* 宽舒电影字幕风 */
+        color: #718096;
+        font-weight: 500;
+        white-space: nowrap;
+    }
+
+    /* 纯 CSS 高级感工业级鼠标 */
+    .interactive-mouse-icon {
+        width: 22px;
+        height: 34px;
+        border: 2px solid #ff3355; /* 适配灰白空间的柔和灰框 */
+        border-radius: 12px; /* 圆润的医学工业感曲线 */
+        position: relative;
+        display: flex;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.4);
+    }
+
+    /* 鼠标内部的纵向流动滚轮线 */
+    .scroll-wheel-line {
+        width: 2px;
+        height: 6px;
+        background: #ff3355; /* 呼应生命红主题色 */
+        border-radius: 1px;
+        margin-top: 6px;
+        animation: cinematicMouseScroll 2.2s infinite cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    /* 影院级无缝滚轮滚动动画矩阵 */
+    @keyframes cinematicMouseScroll {
+        0% {
+            transform: translateY(0);
+            opacity: 0;
+        }
+        20% {
+            opacity: 1;
+        }
+        60% {
+            transform: translateY(8px); /* 丝滑向下滚动推进 */
+            opacity: 0;
+        }
+        100% {
+            transform: translateY(8px);
+            opacity: 0;
+        }
+    }
+
+    /* ==========================================
+       高级工程响应式断点适配矩阵
+       ========================================== */
+    @media (min-width: 1600px) {
+        .hero-text-left-zone .main-title { font-size: 4.2rem; }
+        .hero-text-left-zone { max-width: 680px; }
+        .hero-3d-right-zone { width: 50vw; right: 0; }
+    }
+
+    @media (max-width: 1200px) {
+        .hero-text-left-zone { max-width: 48%; }
+        .hero-text-left-zone .main-title { font-size: 2.8rem; }
+        .hero-3d-right-zone { width: 54vw; }
+    }
+
+    @media (max-width: 900px) {
+        .premium-home-layout { flex-direction: column; justify-content: center; }
+        .hero-3d-right-zone { width: 100vw; height: 100vh; right: 0; opacity: 0.35; } 
+        .hero-text-left-zone { max-width: 100%; z-index: 2; text-align: center; display: flex; flex-direction: column; align-items: center; padding: 0 20px; }
+        .hero-text-left-zone .main-title { font-size: 2.4rem; }
+        .hero-text-left-zone .accent-bar { margin: 0 auto 35px auto; }
+        .cinematic-mouse-guide { display: none; } /* 移动端隐去 */
+    }
+
+    @media (max-width: 480px) {
+        .hero-text-left-zone .main-title { font-size: 1.95rem; line-height: 1.45; }
+        .hero-text-left-zone .body-text { font-size: 0.92rem; line-height: 1.9; color: #4a5568; }
+        .explore-trigger { 
+            width: 100%; 
+            justify-content: space-between; 
+            background: rgba(255, 255, 255, 0.7); 
+            padding: 12px 20px; 
+            border-radius: 30px; 
+            border: 1px solid rgba(0, 0, 0, 0.04); 
+            -webkit-backdrop-filter: blur(5px); 
+            backdrop-filter: blur(5px); 
+        }
+    }
+</style>

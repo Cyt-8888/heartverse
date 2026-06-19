@@ -1,0 +1,1655 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PulseEcho - 高阶医学拓扑空间与智能临床审计中心</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    
+    <style>
+        /* ===================================================
+           🎨 全局非标电影级美学大底座样式表（延续 section1 风格）
+           =================================================== */
+        body {
+            margin: 0;
+            background: transparent;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .clinical-comparison-container {
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            align-items: stretch;
+            background: transparent;
+            padding: 30px 2%;
+            gap: 3%;
+            box-sizing: border-box;
+        }
+
+        .analytics-nav-sidebar {
+            flex: 0 0 22%;
+            max-width: 260px;
+            padding-right: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 35px;
+        }
+        .sidebar-meta-header .meta-section-idx {
+            font-family: 'Courier New', monospace;
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: #ff3355;
+            letter-spacing: 2px;
+        }
+        .sidebar-meta-header .sidebar-main-title {
+            font-size: 1.85rem;
+            font-weight: 700;
+            color: #0f1115;
+            margin: 6px 0 4px 0;
+            letter-spacing: -0.5px;
+        }
+        .sidebar-meta-header .sidebar-sub-title {
+            font-size: 0.78rem;
+            color: #444444;
+            margin: 0 0 16px 0;
+            line-height: 1.4;
+        }
+        .sidebar-accent-line {
+            width: 40px;
+            height: 2px;
+            background: #0f1115;
+        }
+
+        .theme-menu-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .theme-menu-list .menu-item {
+            width: 100%;
+            background: transparent;
+            border: none;
+            outline: none;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 12px;
+            text-align: left;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .theme-menu-list .menu-item .menu-idx {
+            font-family: 'Courier New', monospace;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: rgba(15, 17, 21, 0.4);
+        }
+        .theme-menu-list .menu-item .menu-txt {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #222222;
+        }
+        .theme-menu-list .menu-item:hover {
+            background: rgba(15, 17, 21, 0.04);
+        }
+        .theme-menu-list .menu-item:hover .menu-txt {
+            color: #ff3355;
+        }
+        .theme-menu-list .menu-item.active {
+            background: #545556;
+        }
+        .theme-menu-list .menu-item.active .menu-idx { color: #ff3355; font-weight: 800; }
+        .theme-menu-list .menu-item.active .menu-txt { color: #ffffff; font-weight: 700; }
+
+        .analytics-content-display {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .theme-stage-panel {
+            display: none;
+            flex-direction: column;
+            width: 100%;
+            gap: 24px;
+        }
+        .theme-stage-panel.active {
+            display: flex;
+            animation: fadeInStage 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+        @keyframes fadeInStage {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .eda-view-header {
+            border-bottom: 1px solid rgba(15, 17, 21, 0.1);
+            padding-bottom: 14px;
+        }
+        .eda-view-header .view-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #0f1115;
+            margin: 0 0 6px 0;
+            letter-spacing: -0.3px;
+        }
+        .eda-view-header .view-desc {
+            font-size: 0.85rem;
+            color: #444444;
+            margin: 0;
+            line-height: 1.6;
+        }
+
+        .chart-outer-frame {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            background: rgb(238 240 246);
+            border: 1px solid rgba(15, 17, 21, 0.08);
+            border-radius: 6px;
+            padding: 24px;
+            box-sizing: border-box;
+        }
+        .chart-viewport-box {
+            width: 100%;
+            min-height: 470px;
+        }
+
+        .chart-annotation-legend-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 18px;
+            padding-top: 14px;
+            border-top: 1px dashed rgba(15, 17, 21, 0.12);
+        }
+        .annotation-tag-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.78rem;
+            color: #0f1115;
+            font-weight: 700;
+        }
+        .tag-color-block {
+            width: 14px;
+            height: 14px;
+            border-radius: 3px;
+        }
+        
+        .tag-color-primary   { background: #0f1115; }
+        .tag-color-high-risk { background: #ff3355; }
+        .tag-color-healthy   { background: #10ac84; }
+        .tag-color-grey      { background: #747d8c; }
+        .tag-color-orange    { background: #d35400; }
+        .tag-color-trans-green { background: rgba(16, 172, 132, 0.65); }
+        .tag-color-trans-red   { background: rgba(255, 51, 85, 0.7); box-shadow: 0 0 3px rgba(255, 51, 85, 0.5); }
+
+        .tag-line-style-solid { width: 22px; height: 3px; border-radius: 1px; }
+        .tag-line-style-dashed { width: 22px; height: 3px; border-style: dashed; border-width: 0 0 3px 0; }
+        
+        .tag-line-black-solid { background: #0f1115; }
+        .tag-line-green-dash  { border-color: #10ac84; }
+        .tag-line-red-solid   { background: #ff3355; }
+        .tag-line-green-solid { background: #10ac84; }
+
+        .tag-pulse-circle {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            position: relative;
+            animation: miniPulse 1.8s infinite ease-in-out;
+        }
+        .tag-pulse-black {
+            background: #0f1115;
+            border: 1px solid #ffffff;
+            box-shadow: 0 0 8px #0f1115;
+        }
+        @keyframes miniPulse {
+            0% { transform: scale(0.85); opacity: 1; }
+            50% { transform: scale(1.4); opacity: 0.5; }
+            100% { transform: scale(0.85); opacity: 1; }
+        }
+
+        .simulation-chart-frame {
+            margin-top: 18px;
+            background: rgb(238 240 246);
+            border: 1px solid rgba(15, 17, 21, 0.08);
+            border-radius: 6px;
+            padding: 24px;
+            box-sizing: border-box;
+        }
+        .simulation-chart-box {
+            width: 100%;
+            height: 340px;
+        }
+        .simulation-dashboard-layout {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .simulation-control-deck {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            background: rgb(238 240 246);
+            border: 1px solid rgba(15, 17, 21, 0.08);
+            padding: 20px;
+            border-radius: 6px;
+        }
+        .sim-slider-group {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .sim-slider-group label {
+            width: 180px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #0f1115;
+        }
+        .sim-slider-group label span {
+            color: #ff3355;
+            font-family: monospace;
+            font-weight: 800;
+        }
+        
+        .control-slider-wrapper {
+            flex: 1;
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .pure-range-slider {
+            -webkit-appearance: none;
+            appearance: none; 
+            width: 100%;
+            height: 6px;
+            background: rgba(15, 17, 21, 0.12);
+            outline: none;
+            border-radius: 3px;
+            transition: all 0.2s;
+        }
+        .pure-range-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none; 
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #0f1115;
+            border: 2px solid #ffffff;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .pure-range-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.35);
+            background: #ff3355;
+        }
+        .pure-range-slider:focus {
+            background: rgba(15, 17, 21, 0.2);
+        }
+
+        @media (max-width: 1180px) {
+            .clinical-comparison-container {
+                flex-direction: column;
+                gap: 25px;
+                padding: 20px 15px;
+            }
+            .analytics-nav-sidebar {
+                flex: 0 0 auto;
+                max-width: 100%;
+                border-right: none;
+                border-bottom: 1px solid rgba(15,17,21,0.1);
+                padding-right: 0;
+                padding-bottom: 20px;
+            }
+            .theme-menu-list {
+                flex-direction: row;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            .theme-menu-list .menu-item {
+                width: calc(25% - 6px);
+                padding: 10px;
+                justify-content: center;
+            }
+        }
+        @media (max-width: 768px) {
+            .theme-menu-list .menu-item {
+                width: calc(50% - 4px);
+            }
+            .sim-slider-group {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            .sim-slider-group label { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="clinical-comparison-container">
+    
+    <div class="analytics-nav-sidebar">
+        <div class="sidebar-meta-header">
+            <span class="meta-section-idx">METRIC CLINICAL DECK</span>
+            <h2 class="sidebar-main-title">数据探索</h2>
+            <p class="sidebar-sub-title">数据集的可解释分析报告</p>
+            <div class="sidebar-accent-line"></div>
+        </div>
+        
+        <nav class="theme-menu-list" role="tablist" aria-label="核心面板选择">
+            <button class="menu-item active" data-target="panel-radar" role="tab" aria-selected="true">
+                <span class="menu-idx">01</span>
+                <span class="menu-txt">风险群体画像 (Radar)</span>
+            </button>
+            <button class="menu-item" data-target="panel-network" role="tab" aria-selected="false">
+                <span class="menu-idx">02</span>
+                <span class="menu-txt">因子关联网络 (Force)</span>
+            </button>
+            <button class="menu-item" data-target="panel-sankey" role="tab" aria-selected="false">
+                <span class="menu-idx">03</span>
+                <span class="menu-txt">风险演化路径 (Sankey)</span>
+            </button>
+            <button class="menu-item" data-target="panel-surface" role="tab" aria-selected="false">
+                <span class="menu-idx">04</span>
+                <span class="menu-txt">风险地形透视 (Surface)</span>
+            </button>
+            <button class="menu-item" data-target="panel-bubble" role="tab" aria-selected="false">
+                <span class="menu-idx">05</span>
+                <span class="menu-txt">决策审计 (Bubble)</span>
+            </button>
+            <button class="menu-item" data-target="panel-tsne" role="tab" aria-selected="false">
+                <span class="menu-idx">06</span>
+                <span class="menu-txt">患者聚类地图 (UMAP)</span>
+            </button>
+            <button class="menu-item" data-target="panel-locator" role="tab" aria-selected="false">
+                <span class="menu-idx">07</span>
+                <span class="menu-txt">个体数字落点 (Locator)</span>
+            </button>
+            <button class="menu-item" data-target="panel-simulation" role="tab" aria-selected="false">
+                <span class="menu-idx">08</span>
+                <span class="menu-txt">动态风险演化 (Trend)</span>
+            </button>
+        </nav>
+    </div>
+
+    <div class="analytics-content-display">
+        
+        <div id="panel-radar" class="theme-stage-panel active" role="tabpanel">
+            <div class="eda-view-header">
+                <h3 class="view-title">01 / 风险群体画像（健康与患病双队列多维解译）</h3>
+                <p class="view-desc">依据真实数据，对比受试者与健康/患病队列质心的几何重叠，暴露病理表型偏移。</p>
+            </div>
+            <div class="chart-outer-frame">
+                <div class="chart-viewport-box" id="chart-clinical-radar"></div>
+                <div class="chart-annotation-legend-bar">
+                    <div class="annotation-tag-item"><div class="tag-line-style-solid tag-line-black-solid"></div>受试者真实测定矢量</div>
+                    <div class="annotation-tag-item"><div class="tag-line-style-dashed tag-line-green-dash"></div>群体健康队列质心基线</div>
+                    <div class="annotation-tag-item"><div class="tag-line-style-solid tag-line-red-solid"></div>群体确诊高危队列质心基线</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="panel-network" class="theme-stage-panel" role="tabpanel">
+            <div class="eda-view-header">
+                <h3 class="view-title">02 / 风险因子关系网络（真实数据相关系数的拓扑关联）</h3>
+                <p class="view-desc">边权由 Pearson 相关系数决定，节点大小与颜色反映与疾病状态的关联强度。</p>
+            </div>
+            <div class="chart-outer-frame">
+                <div class="chart-viewport-box" id="chart-factor-network"></div>
+                <div class="chart-annotation-legend-bar">
+                    <div class="annotation-tag-item"><div class="tag-color-block tag-color-primary"></div>核心疾病标志靶点</div>
+                    <div class="annotation-tag-item"><div class="tag-color-block tag-color-high-risk"></div>强力关联因子 (|r|>0.3)</div>
+                    <div class="annotation-tag-item"><div class="tag-color-block tag-color-grey"></div>间接外围指标</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="panel-sankey" class="theme-stage-panel" role="tabpanel">
+            <div class="eda-view-header">
+                <h3 class="view-title">03 / 风险路径发现（真实分层的流行病学流量桑基图）</h3>
+                <p class="view-desc">根据年龄、血压、心电图状态构建转移流，流量反映真实样本中的占比，数值显示在连线上。</p>
+            </div>
+            <div class="chart-outer-frame">
+                <div class="chart-viewport-box" id="chart-path-sankey"></div>
+                <div class="chart-annotation-legend-bar">
+                    <div class="annotation-tag-item"><div class="tag-color-block tag-color-high-risk"></div>高风险恶化通道</div>
+                    <div class="annotation-tag-item"><div class="tag-color-block tag-color-healthy"></div>良性控制分流路径</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="panel-surface" class="theme-stage-panel" role="tabpanel">
+            <div class="eda-view-header">
+                <h3 class="view-title">04 / 风险地形透视（年龄 × 胆固醇联合作用决策表面）</h3>
+                <p class="view-desc">基于逻辑回归模型绘制概率曲面，颜色从绿（低风险）经灰到红（高风险）渐变，格子内显示概率值。</p>
+            </div>
+            <div class="chart-outer-frame">
+                <div class="chart-viewport-box" id="chart-risk-surface"></div>
+                <div class="chart-annotation-legend-bar">
+                    <div class="annotation-tag-item"><div class="tag-color-block tag-color-high-risk"></div>极化警戒区 (概率 &gt; 80%)</div>
+                    <div class="annotation-tag-item"><div class="tag-color-block tag-color-healthy"></div>安全基底平面</div>
+                    <div class="annotation-tag-item"><div class="tag-pulse-circle tag-pulse-black"></div>受试者双特征相交落点投影</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="panel-bubble" class="theme-stage-panel" role="tabpanel">
+            <div class="eda-view-header">
+                <h3 class="view-title">05 / 决策审计（数据的特征区分能力气泡图）</h3>
+                <p class="view-desc">气泡大小表示各特征在健康/患病两组间的区分度（|相关系数|），红色为高权重（>0.25），灰色为低权重。</p>
+            </div>
+            <div class="chart-outer-frame">
+                <div class="chart-viewport-box" id="chart-ai-bubble"></div>
+                <div class="chart-annotation-legend-bar">
+                    <div class="annotation-tag-item"><div class="tag-color-block tag-color-high-risk"></div>高区分度 (|r| > 0.25)</div>
+                    <div class="annotation-tag-item"><div class="tag-color-block tag-color-grey"></div>低区分度</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="panel-tsne" class="theme-stage-panel" role="tabpanel">
+            <div class="eda-view-header">
+                <h3 class="view-title">06 / 群体几何学（PCA 降维的患者拓扑地图）</h3>
+                <p class="view-desc">使用主成分分析将高维数据投影到二维，展示自然人群分层，用户位置高亮显示。</p>
+            </div>
+            <div class="chart-outer-frame">
+                <div class="chart-viewport-box" id="chart-tsne-cluster"></div>
+                <div class="chart-annotation-legend-bar">
+                    <div class="annotation-tag-item"><div class="tag-color-block tag-color-healthy"></div>健康控制组</div>
+                    <div class="annotation-tag-item"><div class="tag-color-block tag-color-grey"></div>中低风险组</div>
+                    <div class="annotation-tag-item"><div class="tag-color-block tag-color-high-risk"></div>高危确诊组</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="panel-locator" class="theme-stage-panel" role="tabpanel">
+            <div class="eda-view-header">
+                <h3 class="view-title">07 / 个体映射定位（受试者在真实 PCA 空间中的高亮投影）</h3>
+                <p class="view-desc">将当前输入映射到 PCA 空间，与真实患者点云对比，定位所属风险区域。</p>
+            </div>
+            <div class="chart-outer-frame">
+                <div class="chart-viewport-box" id="chart-user-locator"></div>
+                <div class="chart-annotation-legend-bar">
+                    <div class="annotation-tag-item"><div class="tag-color-block tag-color-trans-green"></div>健康控制组点云</div>
+                    <div class="annotation-tag-item"><div class="tag-color-block tag-color-trans-red"></div>确诊高危组点云</div>
+                    <div class="annotation-tag-item"><div class="tag-pulse-circle tag-pulse-black"></div>受试者定位靶心</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="panel-simulation" class="theme-stage-panel" role="tabpanel">
+            <div class="eda-view-header">
+                <h3 class="view-title">08 / 动态风险演化（生理负载时间轴交互推演趋势弧）</h3>
+                <p class="view-desc">基于逻辑回归模型，模拟年龄、胆固醇、血压未来变化对风险的动态影响。拖动下方滑块实时更新。</p>
+            </div>
+            <div class="simulation-dashboard-layout">
+                <div class="simulation-control-deck">
+                    <div class="sim-slider-group">
+                        <label for="sim-input-age">年龄未来推进模拟 (<span id="lbl-sim-age">55</span> 岁)</label>
+                        <div class="control-slider-wrapper">
+                            <input type="range" id="sim-input-age" min="30" max="85" value="55" step="1" class="pure-range-slider">
+                        </div>
+                    </div>
+                    <div class="sim-slider-group">
+                        <label for="sim-input-chol">血清胆固醇远期累积 (<span id="lbl-sim-chol">240</span> mg/dL)</label>
+                        <div class="control-slider-wrapper">
+                            <input type="range" id="sim-input-chol" min="150" max="400" value="240" step="5" class="pure-range-slider">
+                        </div>
+                    </div>
+                    <div class="sim-slider-group">
+                        <label for="sim-input-trestbps">收缩期静态血压负载 (<span id="lbl-sim-bps">130</span> mmHg)</label>
+                        <div class="control-slider-wrapper">
+                            <input type="range" id="sim-input-trestbps" min="90" max="200" value="130" step="2" class="pure-range-slider">
+                        </div>
+                    </div>
+                </div>
+                <div class="simulation-chart-frame">
+                    <div class="simulation-chart-box" id="chart-sim-trend"></div>
+                    <div class="chart-annotation-legend-bar">
+                        <div class="annotation-tag-item"><div class="tag-line-style-solid tag-line-red-solid"></div>高危概率演化弧 (临界值 &gt; 55%)</div>
+                        <div class="annotation-tag-item"><div class="tag-line-style-solid tag-line-green-solid"></div>低风险演化弧</div>
+                        <div class="annotation-tag-item"><div class="tag-line-style-dashed" style="border-color:#0f1115; width:22px; height:0; border-bottom:2px dashed #0f1115;"></div>55% 风险警戒线</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+(function() {
+    // ================================================================
+    // 1. 内嵌完整 cleaned_heart.csv 数据（303 条真实记录）
+    // ================================================================
+    const RAW_DATA = [
+        [63,1,1,145,233,1,2,150,0,2.3,3,0,6,0],
+        [67,1,4,160,286,0,2,108,1,1.5,2,3,3,1],
+        [67,1,4,120,229,0,2,129,1,2.6,2,2,7,1],
+        [37,1,3,130,250,0,0,187,0,3.5,3,0,3,0],
+        [41,0,2,130,204,0,2,172,0,1.4,1,0,3,0],
+        [56,1,2,120,236,0,0,178,0,0.8,1,0,3,0],
+        [62,0,4,140,268,0,2,160,0,3.6,3,2,3,1],
+        [57,0,4,120,354,0,0,163,1,0.6,1,0,3,0],
+        [63,1,4,130,254,0,2,147,0,1.4,2,1,7,1],
+        [53,1,4,140,203,1,2,155,1,3.1,3,0,7,1],
+        [57,1,4,140,192,0,0,148,0,0.4,2,0,6,0],
+        [56,0,2,140,294,0,2,153,0,1.3,2,0,3,0],
+        [56,1,3,130,256,1,2,142,1,0.6,2,1,6,1],
+        [44,1,2,120,263,0,0,173,0,0,1,0,7,0],
+        [52,1,3,172,199,1,0,162,0,0.5,1,0,7,0],
+        [57,1,3,150,168,0,0,174,0,1.6,1,0,3,0],
+        [48,1,2,110,229,0,0,168,0,1,3,0,7,1],
+        [54,1,4,140,239,0,0,160,0,1.2,1,0,3,0],
+        [48,0,3,130,275,0,0,139,0,0.2,1,0,3,0],
+        [49,1,2,130,266,0,0,171,0,0.6,1,0,3,0],
+        [64,1,1,110,211,0,2,144,1,1.8,2,0,3,0],
+        [58,0,1,150,283,1,2,162,0,1,1,0,3,0],
+        [58,1,2,120,284,0,2,160,0,1.8,2,0,3,1],
+        [58,1,3,132,224,0,2,173,0,3.2,1,2,7,1],
+        [60,1,4,130,206,0,2,132,1,2.4,2,2,7,1],
+        [50,0,3,120,219,0,0,158,0,1.6,2,0,3,0],
+        [58,0,3,120,340,0,0,172,0,0,1,0,3,0],
+        [66,0,1,150,226,0,0,114,0,2.6,3,0,3,0],
+        [43,1,4,150,247,0,0,171,0,1.5,1,0,3,0],
+        [40,1,4,110,167,0,2,114,1,2,2,0,7,1],
+        [69,0,1,140,239,0,0,151,0,1.8,1,2,3,0],
+        [60,1,4,117,230,1,0,160,1,1.4,1,2,7,1],
+        [64,1,3,140,335,0,0,158,0,0,1,0,3,1],
+        [59,1,4,135,234,0,0,161,0,0.5,2,0,7,0],
+        [44,1,3,130,233,0,0,179,1,0.4,1,0,3,0],
+        [42,1,4,140,226,0,0,178,0,0,1,0,3,0],
+        [43,1,4,120,177,0,2,120,1,2.5,2,0,7,1],
+        [57,1,4,150,276,0,2,112,1,0.6,2,1,6,1],
+        [55,1,4,132,353,0,0,132,1,1.2,2,1,7,1],
+        [61,1,3,150,243,1,0,137,1,1,2,0,3,0],
+        [65,0,4,150,225,0,2,114,0,1,2,3,7,1],
+        [40,1,1,140,199,0,0,178,1,1.4,1,0,7,0],
+        [71,0,2,160,302,0,0,162,0,0.4,1,2,3,0],
+        [59,1,3,150,212,1,0,157,0,1.6,1,0,3,0],
+        [61,0,4,130,330,0,2,169,0,0,1,0,3,1],
+        [58,1,3,112,230,0,2,165,0,2.5,2,1,7,1],
+        [51,1,3,110,175,0,0,123,0,0.6,1,0,3,0],
+        [50,1,4,150,243,0,2,128,0,2.6,2,0,7,1],
+        [65,0,3,140,417,1,2,157,0,0.8,1,1,3,0],
+        [53,1,3,130,197,1,2,152,0,1.2,3,0,3,0],
+        [41,0,2,105,198,0,0,168,0,0,1,1,3,0],
+        [65,1,4,120,177,0,0,140,0,0.4,1,0,7,0],
+        [44,1,4,112,290,0,2,153,0,0,1,1,3,1],
+        [44,1,2,130,219,0,2,188,0,0,1,0,3,0],
+        [60,1,4,130,253,0,0,144,1,1.4,1,1,7,1],
+        [54,1,4,124,266,0,2,109,1,2.2,2,1,7,1],
+        [50,1,3,140,233,0,0,163,0,0.6,2,1,7,1],
+        [41,1,4,110,172,0,2,158,0,0,1,0,7,1],
+        [54,1,3,125,273,0,2,152,0,0.5,3,1,3,0],
+        [51,1,1,125,213,0,2,125,1,1.4,1,1,3,0],
+        [51,0,4,130,305,0,0,142,1,1.2,2,0,7,1],
+        [46,0,3,142,177,0,2,160,1,1.4,3,0,3,0],
+        [58,1,4,128,216,0,2,131,1,2.2,2,3,7,1],
+        [54,0,3,135,304,1,0,170,0,0,1,0,3,0],
+        [54,1,4,120,188,0,0,113,0,1.4,2,1,7,1],
+        [60,1,4,145,282,0,2,142,1,2.8,2,2,7,1],
+        [60,1,3,140,185,0,2,155,0,3,2,0,3,1],
+        [54,1,3,150,232,0,2,165,0,1.6,1,0,7,0],
+        [59,1,4,170,326,0,2,140,1,3.4,3,0,7,1],
+        [46,1,3,150,231,0,0,147,0,3.6,2,0,3,1],
+        [65,0,3,155,269,0,0,148,0,0.8,1,0,3,0],
+        [67,1,4,125,254,1,0,163,0,0.2,2,2,7,1],
+        [62,1,4,120,267,0,0,99,1,1.8,2,2,7,1],
+        [65,1,4,110,248,0,2,158,0,0.6,1,2,6,1],
+        [44,1,4,110,197,0,2,177,0,0,1,1,3,1],
+        [65,0,3,160,360,0,2,151,0,0.8,1,0,3,0],
+        [60,1,4,125,258,0,2,141,1,2.8,2,1,7,1],
+        [51,0,3,140,308,0,2,142,0,1.5,1,1,3,0],
+        [48,1,2,130,245,0,2,180,0,0.2,2,0,3,0],
+        [58,1,4,150,270,0,2,111,1,0.8,1,0,7,1],
+        [45,1,4,104,208,0,2,148,1,3,2,0,3,0],
+        [53,0,4,130,264,0,2,143,0,0.4,2,0,3,0],
+        [39,1,3,140,321,0,2,182,0,0,1,0,3,0],
+        [68,1,3,180,274,1,2,150,1,1.6,2,0,7,1],
+        [52,1,2,120,325,0,0,172,0,0.2,1,0,3,0],
+        [44,1,3,140,235,0,2,180,0,0,1,0,3,0],
+        [47,1,3,138,257,0,2,156,0,0,1,0,3,0],
+        [53,0,3,128,216,0,2,115,0,0,1,0,3,0],
+        [53,0,4,138,234,0,2,160,0,0,1,0,3,0],
+        [51,0,3,130,256,0,2,149,0,0.5,1,0,3,0],
+        [66,1,4,120,302,0,2,151,0,0.4,2,0,3,0],
+        [62,0,4,160,164,0,2,145,0,6.2,3,3,7,1],
+        [62,1,3,130,231,0,0,146,0,1.8,2,3,7,0],
+        [44,0,3,108,141,0,0,175,0,0.6,2,0,3,0],
+        [63,0,3,135,252,0,2,172,0,0,1,0,3,0],
+        [52,1,4,128,255,0,0,161,1,0,1,1,7,1],
+        [59,1,4,110,239,0,2,142,1,1.2,2,1,7,1],
+        [60,0,4,150,258,0,2,157,0,2.6,2,2,7,1],
+        [52,1,2,134,201,0,0,158,0,0.8,1,1,3,0],
+        [48,1,4,122,222,0,2,186,0,0,1,0,3,0],
+        [45,1,4,115,260,0,2,185,0,0,1,0,3,0],
+        [34,1,1,118,182,0,2,174,0,0,1,0,3,0],
+        [57,0,4,128,303,0,2,159,0,0,1,1,3,0],
+        [71,0,3,110,265,1,2,130,0,0,1,1,3,0],
+        [49,1,3,120,188,0,0,139,0,2,2,3,7,1],
+        [54,1,2,108,309,0,0,156,0,0,1,0,7,0],
+        [59,1,4,140,177,0,0,162,1,0,1,1,7,1],
+        [57,1,3,128,229,0,2,150,0,0.4,2,1,7,1],
+        [61,1,4,120,260,0,0,140,1,3.6,2,1,7,1],
+        [39,1,4,118,219,0,0,140,0,1.2,2,0,7,1],
+        [61,0,4,145,307,0,2,146,1,1,2,0,7,1],
+        [56,1,4,125,249,1,2,144,1,1.2,2,1,3,1],
+        [52,1,1,118,186,0,2,190,0,0,2,0,6,0],
+        [43,0,4,132,341,1,2,136,1,3,2,0,7,1],
+        [62,0,3,130,263,0,0,97,0,1.2,2,1,7,1],
+        [41,1,2,135,203,0,0,132,0,0,2,0,6,0],
+        [58,1,3,140,211,1,2,165,0,0,1,0,3,0],
+        [35,0,4,138,183,0,0,182,0,1.4,1,0,3,0],
+        [63,1,4,130,330,1,2,132,1,1.8,1,3,7,1],
+        [65,1,4,135,254,0,2,127,0,2.8,2,1,7,1],
+        [48,1,4,130,256,1,2,150,1,0,1,2,7,1],
+        [63,0,4,150,407,0,2,154,0,4,2,3,7,1],
+        [51,1,3,100,222,0,0,143,1,1.2,2,0,3,0],
+        [55,1,4,140,217,0,0,111,1,5.6,3,0,7,1],
+        [65,1,1,138,282,1,2,174,0,1.4,2,1,3,1],
+        [45,0,2,130,234,0,2,175,0,0.6,2,0,3,0],
+        [56,0,4,200,288,1,2,133,1,4,3,2,7,1],
+        [54,1,4,110,239,0,0,126,1,2.8,2,1,7,1],
+        [44,1,2,120,220,0,0,170,0,0,1,0,3,0],
+        [62,0,4,124,209,0,0,163,0,0,1,0,3,0],
+        [54,1,3,120,258,0,2,147,0,0.4,2,0,7,0],
+        [51,1,3,94,227,0,0,154,1,0,1,1,7,0],
+        [29,1,2,130,204,0,2,202,0,0,1,0,3,0],
+        [51,1,4,140,261,0,2,186,1,0,1,0,3,0],
+        [43,0,3,122,213,0,0,165,0,0.2,2,0,3,0],
+        [55,0,2,135,250,0,2,161,0,1.4,2,0,3,0],
+        [70,1,4,145,174,0,0,125,1,2.6,3,0,7,1],
+        [62,1,2,120,281,0,2,103,0,1.4,2,1,7,1],
+        [35,1,4,120,198,0,0,130,1,1.6,2,0,7,1],
+        [51,1,3,125,245,1,2,166,0,2.4,2,0,3,0],
+        [59,1,2,140,221,0,0,164,1,0,1,0,3,0],
+        [59,1,1,170,288,0,2,159,0,0.2,2,0,7,1],
+        [52,1,2,128,205,1,0,184,0,0,1,0,3,0],
+        [64,1,3,125,309,0,0,131,1,1.8,2,0,7,1],
+        [58,1,3,105,240,0,2,154,1,0.6,2,0,7,0],
+        [47,1,3,108,243,0,0,152,0,0,1,0,3,1],
+        [57,1,4,165,289,1,2,124,0,1,2,3,7,1],
+        [41,1,3,112,250,0,0,179,0,0,1,0,3,0],
+        [45,1,2,128,308,0,2,170,0,0,1,0,3,0],
+        [60,0,3,102,318,0,0,160,0,0,1,1,3,0],
+        [52,1,1,152,298,1,0,178,0,1.2,2,0,7,0],
+        [42,0,4,102,265,0,2,122,0,0.6,2,0,3,0],
+        [67,0,3,115,564,0,2,160,0,1.6,2,0,7,0],
+        [55,1,4,160,289,0,2,145,1,0.8,2,1,7,1],
+        [64,1,4,120,246,0,2,96,1,2.2,3,1,3,1],
+        [70,1,4,130,322,0,2,109,0,2.4,2,3,3,1],
+        [51,1,4,140,299,0,0,173,1,1.6,1,0,7,1],
+        [58,1,4,125,300,0,2,171,0,0,1,2,7,1],
+        [60,1,4,140,293,0,2,170,0,1.2,2,2,7,1],
+        [68,1,3,118,277,0,0,151,0,1,1,1,7,0],
+        [46,1,2,101,197,1,0,156,0,0,1,0,7,0],
+        [77,1,4,125,304,0,2,162,1,0,1,3,3,1],
+        [54,0,3,110,214,0,0,158,0,1.6,2,0,3,0],
+        [58,0,4,100,248,0,2,122,0,1,2,0,3,0],
+        [48,1,3,124,255,1,0,175,0,0,1,2,3,0],
+        [57,1,4,132,207,0,0,168,1,0,1,0,7,0],
+        [52,1,3,138,223,0,0,169,0,0,1,0,3,0],
+        [54,0,2,132,288,1,2,159,1,0,1,1,3,0],
+        [35,1,4,126,282,0,2,156,1,0,1,0,7,1],
+        [45,0,2,112,160,0,0,138,0,0,2,0,3,0],
+        [70,1,3,160,269,0,0,112,1,2.9,2,1,7,1],
+        [53,1,4,142,226,0,2,111,1,0,1,0,7,0],
+        [59,0,4,174,249,0,0,143,1,0,2,0,3,1],
+        [62,0,4,140,394,0,2,157,0,1.2,2,0,3,0],
+        [64,1,4,145,212,0,2,132,0,2,2,2,6,1],
+        [57,1,4,152,274,0,0,88,1,1.2,2,1,7,1],
+        [52,1,4,108,233,1,0,147,0,0.1,1,3,7,0],
+        [56,1,4,132,184,0,2,105,1,2.1,2,1,6,1],
+        [43,1,3,130,315,0,0,162,0,1.9,1,1,3,0],
+        [53,1,3,130,246,1,2,173,0,0,1,3,3,0],
+        [48,1,4,124,274,0,2,166,0,0.5,2,0,7,1],
+        [56,0,4,134,409,0,2,150,1,1.9,2,2,7,1],
+        [42,1,1,148,244,0,2,178,0,0.8,1,2,3,0],
+        [59,1,1,178,270,0,2,145,0,4.2,3,0,7,0],
+        [60,0,4,158,305,0,2,161,0,0,1,0,3,1],
+        [63,0,2,140,195,0,0,179,0,0,1,2,3,0],
+        [42,1,3,120,240,1,0,194,0,0.8,3,0,7,0],
+        [66,1,2,160,246,0,0,120,1,0,2,3,6,1],
+        [54,1,2,192,283,0,2,195,0,0,1,1,7,1],
+        [69,1,3,140,254,0,2,146,0,2,2,3,7,1],
+        [50,1,3,129,196,0,0,163,0,0,1,0,3,0],
+        [51,1,4,140,298,0,0,122,1,4.2,2,3,7,1],
+        [43,1,4,132,247,1,2,143,1,0.1,2,0,7,1],
+        [62,0,4,138,294,1,0,106,0,1.9,2,3,3,1],
+        [68,0,3,120,211,0,2,115,0,1.5,2,0,3,0],
+        [67,1,4,100,299,0,2,125,1,0.9,2,2,3,1],
+        [69,1,1,160,234,1,2,131,0,0.1,2,1,3,0],
+        [45,0,4,138,236,0,2,152,1,0.2,2,0,3,0],
+        [50,0,2,120,244,0,0,162,0,1.1,1,0,3,0],
+        [59,1,1,160,273,0,2,125,0,0,1,0,3,1],
+        [50,0,4,110,254,0,2,159,0,0,1,0,3,0],
+        [64,0,4,180,325,0,0,154,1,0,1,0,3,0],
+        [57,1,3,150,126,1,0,173,0,0.2,1,1,7,0],
+        [64,0,3,140,313,0,0,133,0,0.2,1,0,7,0],
+        [43,1,4,110,211,0,0,161,0,0,1,0,7,0],
+        [45,1,4,142,309,0,2,147,1,0,2,3,7,1],
+        [58,1,4,128,259,0,2,130,1,3,2,2,7,1],
+        [50,1,4,144,200,0,2,126,1,0.9,2,0,7,1],
+        [55,1,2,130,262,0,0,155,0,0,1,0,3,0],
+        [62,0,4,150,244,0,0,154,1,1.4,2,0,3,1],
+        [37,0,3,120,215,0,0,170,0,0,1,0,3,0],
+        [38,1,1,120,231,0,0,182,1,3.8,2,0,7,1],
+        [41,1,3,130,214,0,2,168,0,2,2,0,3,0],
+        [66,0,4,178,228,1,0,165,1,1,2,2,7,1],
+        [52,1,4,112,230,0,0,160,0,0,1,1,3,1],
+        [56,1,1,120,193,0,2,162,0,1.9,2,0,7,0],
+        [46,0,2,105,204,0,0,172,0,0,1,0,3,0],
+        [46,0,4,138,243,0,2,152,1,0,2,0,3,0],
+        [64,0,4,130,303,0,0,122,0,2,2,2,3,0],
+        [59,1,4,138,271,0,2,182,0,0,1,0,3,0],
+        [41,0,3,112,268,0,2,172,1,0,1,0,3,0],
+        [54,0,3,108,267,0,2,167,0,0,1,0,3,0],
+        [39,0,3,94,199,0,0,179,0,0,1,0,3,0],
+        [53,1,4,123,282,0,0,95,1,2,2,2,7,1],
+        [63,0,4,108,269,0,0,169,1,1.8,2,2,3,1],
+        [34,0,2,118,210,0,0,192,0,0.7,1,0,3,0],
+        [47,1,4,112,204,0,0,143,0,0.1,1,0,3,0],
+        [67,0,3,152,277,0,0,172,0,0,1,1,3,0],
+        [54,1,4,110,206,0,2,108,1,0,2,1,3,1],
+        [66,1,4,112,212,0,2,132,1,0.1,1,1,3,1],
+        [52,0,3,136,196,0,2,169,0,0.1,2,0,3,0],
+        [55,0,4,180,327,0,1,117,1,3.4,2,0,3,1],
+        [49,1,3,118,149,0,2,126,0,0.8,1,3,3,1],
+        [74,0,2,120,269,0,2,121,1,0.2,1,1,3,0],
+        [54,0,3,160,201,0,0,163,0,0,1,1,3,0],
+        [54,1,4,122,286,0,2,116,1,3.2,2,2,3,1],
+        [56,1,4,130,283,1,2,103,1,1.6,3,0,7,1],
+        [46,1,4,120,249,0,2,144,0,0.8,1,0,7,1],
+        [49,0,2,134,271,0,0,162,0,0,2,0,3,0],
+        [42,1,2,120,295,0,0,162,0,0,1,0,3,0],
+        [41,1,2,110,235,0,0,153,0,0,1,0,3,0],
+        [41,0,2,126,306,0,0,163,0,0,1,0,3,0],
+        [49,0,4,130,269,0,0,163,0,0,1,0,3,0],
+        [61,1,1,134,234,0,0,145,0,2.6,2,2,3,1],
+        [60,0,3,120,178,1,0,96,0,0,1,0,3,0],
+        [67,1,4,120,237,0,0,71,0,1,2,0,3,1],
+        [58,1,4,100,234,0,0,156,0,0.1,1,1,7,1],
+        [47,1,4,110,275,0,2,118,1,1,2,1,3,1],
+        [52,1,4,125,212,0,0,168,0,1,1,2,7,1],
+        [62,1,2,128,208,1,2,140,0,0,1,0,3,0],
+        [57,1,4,110,201,0,0,126,1,1.5,2,0,6,0],
+        [58,1,4,146,218,0,0,105,0,2,2,1,7,1],
+        [64,1,4,128,263,0,0,105,1,0.2,2,1,7,0],
+        [51,0,3,120,295,0,2,157,0,0.6,1,0,3,0],
+        [43,1,4,115,303,0,0,181,0,1.2,2,0,3,0],
+        [42,0,3,120,209,0,0,173,0,0,2,0,3,0],
+        [67,0,4,106,223,0,0,142,0,0.3,1,2,3,0],
+        [76,0,3,140,197,0,1,116,0,1.1,2,0,3,0],
+        [70,1,2,156,245,0,2,143,0,0,1,0,3,0],
+        [57,1,2,124,261,0,0,141,0,0.3,1,0,7,1],
+        [44,0,3,118,242,0,0,149,0,0.3,2,1,3,0],
+        [58,0,2,136,319,1,2,152,0,0,1,2,3,1],
+        [60,0,1,150,240,0,0,171,0,0.9,1,0,3,0],
+        [44,1,3,120,226,0,0,169,0,0,1,0,3,0],
+        [61,1,4,138,166,0,2,125,1,3.6,2,1,3,1],
+        [42,1,4,136,315,0,0,125,1,1.8,2,0,6,1],
+        [52,1,4,128,204,1,0,156,1,1,2,0,3,1],
+        [59,1,3,126,218,1,0,134,0,2.2,2,1,6,1],
+        [40,1,4,152,223,0,0,181,0,0,1,0,7,1],
+        [42,1,3,130,180,0,0,150,0,0,1,0,3,0],
+        [61,1,4,140,207,0,2,138,1,1.9,1,1,7,1],
+        [66,1,4,160,228,0,2,138,0,2.3,1,0,6,0],
+        [46,1,4,140,311,0,0,120,1,1.8,2,2,7,1],
+        [71,0,4,112,149,0,0,125,0,1.6,2,0,3,0],
+        [59,1,1,134,204,0,0,162,0,0.8,1,2,3,1],
+        [64,1,1,170,227,0,2,155,0,0.6,2,0,7,0],
+        [66,0,3,146,278,0,2,152,0,0,2,1,3,0],
+        [39,0,3,138,220,0,0,152,0,0,2,0,3,0],
+        [57,1,2,154,232,0,2,164,0,0,1,1,3,1],
+        [58,0,4,130,197,0,0,131,0,0.6,2,0,3,0],
+        [57,1,4,110,335,0,0,143,1,3,2,1,7,1],
+        [47,1,3,130,253,0,0,179,0,0,1,0,3,0],
+        [55,0,4,128,205,0,1,130,1,2,2,1,7,1],
+        [35,1,2,122,192,0,0,174,0,0,1,0,3,0],
+        [61,1,4,148,203,0,0,161,0,0,1,1,7,1],
+        [58,1,4,114,318,0,1,140,0,4.4,3,3,6,1],
+        [58,0,4,170,225,1,2,146,1,2.8,2,2,6,1],
+        [58,1,2,125,220,0,0,144,0,0.4,2,0,7,0],
+        [56,1,2,130,221,0,2,163,0,0,1,0,7,0],
+        [56,1,2,120,240,0,0,169,0,0,3,0,3,0],
+        [67,1,3,152,212,0,2,150,0,0.8,2,0,7,1],
+        [55,0,2,132,342,0,0,166,0,1.2,1,0,3,0],
+        [44,1,4,120,169,0,0,144,1,2.8,3,0,6,1],
+        [63,1,4,140,187,0,2,144,1,4,1,2,7,1],
+        [63,0,4,124,197,0,0,136,1,0,2,0,3,1],
+        [41,1,2,120,157,0,0,182,0,0,1,0,3,0],
+        [59,1,4,164,176,1,2,90,0,1,2,2,6,1],
+        [57,0,4,140,241,0,0,123,1,0.2,2,0,7,1],
+        [45,1,1,110,264,0,0,132,0,1.2,2,0,7,1],
+        [68,1,4,144,193,1,0,141,0,3.4,2,2,7,1],
+        [57,1,4,130,131,0,0,115,1,1.2,2,1,7,1],
+        [57,0,2,130,236,0,2,174,0,0,2,1,3,1],
+        [38,1,3,138,175,0,0,173,0,0,1,0,3,0]
+    ];
+
+    // ================================================================
+    // 2. 数据解析与统计量预计算
+    // ================================================================
+    const FEATURE_NAMES = ['age','sex','cp','trestbps','chol','fbs','restecg','thalach','exang','oldpeak','slope','ca','thal'];
+    
+    // 中文特征名映射（用于网络图和气泡图）
+    const FEATURE_NAMES_CN = {
+        'age': '年龄',
+        'sex': '性别',
+        'cp': '胸痛类型',
+        'trestbps': '静息血压',
+        'chol': '胆固醇',
+        'fbs': '空腹血糖',
+        'restecg': '静息心电',
+        'thalach': '最大心率',
+        'exang': '运动心绞痛',
+        'oldpeak': 'ST段压低',
+        'slope': 'ST段斜率',
+        'ca': '血管阻塞数',
+        'thal': '血流分型'
+    };
+
+    const data = RAW_DATA.map(row => {
+        const obj = {};
+        FEATURE_NAMES.forEach((f,i) => obj[f] = row[i]);
+        obj.target = row[13];
+        return obj;
+    });
+
+    const healthy = data.filter(d => d.target === 0);
+    const patient = data.filter(d => d.target === 1);
+
+    function mean(arr, key) {
+        const sum = arr.reduce((s,d) => s + d[key], 0);
+        return sum / arr.length;
+    }
+    const healthyMean = {};
+    const patientMean = {};
+    FEATURE_NAMES.forEach(f => {
+        healthyMean[f] = mean(healthy, f);
+        patientMean[f] = mean(patient, f);
+    });
+
+    function pearson(xArr, yArr) {
+        const n = xArr.length;
+        const mx = xArr.reduce((a,b) => a + b, 0) / n;
+        const my = yArr.reduce((a,b) => a + b, 0) / n;
+        let sx = 0, sy = 0, sxy = 0;
+        for (let i = 0; i < n; i++) {
+            const dx = xArr[i] - mx;
+            const dy = yArr[i] - my;
+            sx += dx * dx;
+            sy += dy * dy;
+            sxy += dx * dy;
+        }
+        if (sx === 0 || sy === 0) return 0;
+        return sxy / Math.sqrt(sx * sy);
+    }
+    const corrWithTarget = {};
+    FEATURE_NAMES.forEach(f => {
+        const vals = data.map(d => d[f]);
+        const targets = data.map(d => d.target);
+        corrWithTarget[f] = Math.abs(pearson(vals, targets));
+    });
+
+    const corrMatrix = {};
+    FEATURE_NAMES.forEach(f1 => {
+        FEATURE_NAMES.forEach(f2 => {
+            const key = f1 + '|' + f2;
+            const vals1 = data.map(d => d[f1]);
+            const vals2 = data.map(d => d[f2]);
+            corrMatrix[key] = pearson(vals1, vals2);
+        });
+    });
+
+    // ================================================================
+    // 3. 风险计算（与 Section 1 一致）
+    // ================================================================
+    const GLOBAL_MEAN = [54.55, 0.68, 3.15, 130.96, 249.84, 0.14, 0.98, 149.96, 0.33, 1.00, 1.59, 0.61, 4.71];
+    const GLOBAL_SCALE = [8.98, 0.47, 0.97, 17.59, 52.74, 0.35, 0.99, 22.64, 0.47, 1.12, 0.61, 0.88, 1.94];
+    const COEFF = [-0.1034, 0.6561, 0.5432, 0.3137, 0.2155, -0.2206, 0.2173, -0.3482, 0.3837, 0.1492, 0.3543, 1.1081, 0.6783];
+    const INTERCEPT = -0.0811;
+
+    function computeRisk(inputs) {
+        let logit = INTERCEPT;
+        for (let i = 0; i < 13; i++) {
+            const val = inputs[FEATURE_NAMES[i]];
+            const norm = (val - GLOBAL_MEAN[i]) / GLOBAL_SCALE[i];
+            logit += COEFF[i] * norm;
+        }
+        const prob = 1 / (1 + Math.exp(-logit));
+        return prob * 100;
+    }
+
+    // ================================================================
+    // 4. 获取 Section 1 输入
+    // ================================================================
+    function getInputs() {
+        const getVal = (id, fallback) => {
+            const el = document.getElementById(id);
+            if (el) {
+                const v = parseFloat(el.value);
+                return isNaN(v) ? fallback : v;
+            }
+            return fallback;
+        };
+        return {
+            age: getVal('input-age', 56),
+            sex: getVal('input-sex', 1),
+            cp: getVal('input-cp', 4),
+            trestbps: getVal('input-trestbps', 130),
+            chol: getVal('input-chol', 240),
+            fbs: getVal('input-fbs', 0),
+            restecg: getVal('input-restecg', 1),
+            thalach: getVal('input-thalach', 150),
+            exang: getVal('input-exang', 0),
+            oldpeak: getVal('input-oldpeak', 1.0),
+            slope: getVal('input-slope', 1),
+            ca: getVal('input-ca', 0),
+            thal: getVal('input-thal', 3)
+        };
+    }
+
+    // ================================================================
+    // 5. 绘图函数
+    // ================================================================
+    const PRIMARY_BLACK = '#0f1115';
+    const CLINICAL_RED = '#ff3355';
+    const CLINICAL_GREEN = '#10ac84';
+    const TRANS_GREY = '#747d8c';
+
+    let radarChart, networkChart, sankeyChart, surfaceChart;
+    let bubbleChart, tsneChart, locatorChart, simTrendChart;
+
+    // ---------- 01 雷达图 ----------
+    function drawRadar(inputs) {
+        const dom = document.getElementById('chart-clinical-radar');
+        if (!dom) return;
+        if (!radarChart) radarChart = echarts.init(dom);
+        radarChart.resize();
+
+        const indicators = [
+            { name: '年龄', min: 25, max: 80 },
+            { name: '静息血压', min: 90, max: 200 },
+            { name: '胆固醇', min: 120, max: 450 },
+            { name: '最大心率', min: 70, max: 210 },
+            { name: 'ST段下移', min: 0, max: 6.0 },
+            { name: '血管阻塞数', min: 0, max: 3.5 }
+        ];
+        const userVals = [inputs.age, inputs.trestbps, inputs.chol, inputs.thalach, inputs.oldpeak, inputs.ca];
+        const healthyVals = [healthyMean.age, healthyMean.trestbps, healthyMean.chol, healthyMean.thalach, healthyMean.oldpeak, healthyMean.ca];
+        const patientVals = [patientMean.age, patientMean.trestbps, patientMean.chol, patientMean.thalach, patientMean.oldpeak, patientMean.ca];
+
+        radarChart.setOption({
+            backgroundColor: 'transparent',
+            tooltip: { trigger: 'item', backgroundColor: PRIMARY_BLACK, textStyle: { color: '#fff' } },
+            legend: { show: false },
+            radar: {
+                indicator: indicators,
+                center: ['50%', '50%'],
+                radius: '68%',
+                axisName: {
+                    color: PRIMARY_BLACK,
+                    fontWeight: 800,
+                    fontSize: 11,
+                    borderRadius: 2,
+                    padding: [3, 5]
+                },
+                splitLine: { lineStyle: { color: 'rgba(15,17,21,0.15)', width: 1 } },
+                axisLine: { lineStyle: { color: 'rgba(15,17,21,0.2)' } },
+                splitArea: { show: false }
+            },
+            series: [{
+                type: 'radar',
+                symbol: 'circle',
+                symbolSize: 6,
+                data: [
+                    {
+                        value: userVals,
+                        name: '受试者真实测定',
+                        itemStyle: { color: PRIMARY_BLACK },
+                        lineStyle: { width: 3.5 },
+                        areaStyle: { color: 'rgba(15,17,21,0.05)' },
+                        label: {
+                            show: true,
+                            formatter: function(p) {
+                                return Math.round(p.value);
+                            },
+                            fontSize: 10,
+                            color: PRIMARY_BLACK
+                        }
+                    },
+                    {
+                        value: healthyVals,
+                        name: '健康队列质心',
+                        itemStyle: { color: CLINICAL_GREEN },
+                        lineStyle: { width: 2, type: 'dashed' },
+                        label: {
+                            show: true,
+                            formatter: function(p) {
+                                return Math.round(p.value);
+                            },
+                            fontSize: 9,
+                            color: CLINICAL_GREEN
+                        }
+                    },
+                    {
+                        value: patientVals,
+                        name: '患病队列质心',
+                        itemStyle: { color: CLINICAL_RED },
+                        lineStyle: { width: 2.5, type: 'solid' },
+                        label: {
+                            show: true,
+                            formatter: function(p) {
+                                return Math.round(p.value);
+                            },
+                            fontSize: 9,
+                            color: CLINICAL_RED
+                        }
+                    }
+                ]
+            }]
+        });
+    }
+
+    // ---------- 02 网络图（全中文标签） ----------
+    function drawNetwork(inputs) {
+        const dom = document.getElementById('chart-factor-network');
+        if (!dom) return;
+        if (!networkChart) networkChart = echarts.init(dom);
+        networkChart.resize();
+
+        const nodeData = [
+            { name: '心血管病变', symbolSize: 42, itemStyle: { color: PRIMARY_BLACK } }
+        ];
+        // 添加特征节点（中文名 + 相关系数）
+        FEATURE_NAMES.forEach(f => {
+            const w = corrWithTarget[f] || 0.1;
+            const cnName = FEATURE_NAMES_CN[f] || f;
+            nodeData.push({
+                name: cnName + '\n|r|=' + w.toFixed(2),
+                symbolSize: 16 + w * 30,
+                itemStyle: { color: w > 0.3 ? CLINICAL_RED : TRANS_GREY }
+            });
+        });
+
+        const edges = [];
+        // 疾病与特征连线
+        FEATURE_NAMES.forEach(f => {
+            const w = corrWithTarget[f] || 0;
+            const cnName = FEATURE_NAMES_CN[f] || f;
+            if (w > 0.05) {
+                edges.push({
+                    source: '心血管病变',
+                    target: cnName + '\n|r|=' + w.toFixed(2),
+                    lineStyle: { width: 1 + w * 8, color: w > 0.2 ? CLINICAL_RED : 'rgba(15,17,21,0.3)' }
+                });
+            }
+        });
+        // 特征间强相关连线
+        for (let i = 0; i < FEATURE_NAMES.length; i++) {
+            for (let j = i + 1; j < FEATURE_NAMES.length; j++) {
+                const f1 = FEATURE_NAMES[i], f2 = FEATURE_NAMES[j];
+                const r = corrMatrix[f1 + '|' + f2] || 0;
+                const cn1 = FEATURE_NAMES_CN[f1] || f1;
+                const cn2 = FEATURE_NAMES_CN[f2] || f2;
+                if (Math.abs(r) > 0.4) {
+                    edges.push({
+                        source: cn1 + '\n|r|=' + (corrWithTarget[f1] || 0).toFixed(2),
+                        target: cn2 + '\n|r|=' + (corrWithTarget[f2] || 0).toFixed(2),
+                        lineStyle: { width: 1 + Math.abs(r) * 4, color: 'rgba(15,17,21,0.2)', type: 'dashed' }
+                    });
+                }
+            }
+        }
+
+        networkChart.setOption({
+            backgroundColor: 'transparent',
+            tooltip: { trigger: 'item' },
+            series: [{
+                type: 'graph',
+                layout: 'force',
+                roam: true,
+                animation: false,
+                label: {
+                    show: true,
+                    position: 'right',
+                    fontSize: 10,
+                    fontWeight: 700,
+                    color: PRIMARY_BLACK,
+                    lineHeight: 14
+                },
+                force: { repulsion: 1200, edgeLength: 100 },
+                data: nodeData,
+                edges: edges
+            }]
+        });
+    }
+
+    // ---------- 03 桑基图 ----------
+    function drawSankey(inputs) {
+        const dom = document.getElementById('chart-path-sankey');
+        if (!dom) return;
+        if (!sankeyChart) sankeyChart = echarts.init(dom);
+        sankeyChart.resize();
+
+        const ageGroup = inputs.age > 55 ? '55+ 高龄暴露' : '55岁以下中青年';
+        const bpStatus = inputs.trestbps > 130 ? '高血压' : '血压正常区间';
+        const ecgAbnormal = inputs.restecg >= 1 ? '异常心电图' : '正常心电图';
+        const chestPain = inputs.cp >= 3 ? '隐匿无症状胸痛' : '有症状胸痛';
+        const finalOutcome = computeRisk(inputs) > 50 ? '高危心脏病' : '判定健康正常';
+
+        const ageOld = data.filter(d => d.age > 55).length;
+        const ageYoung = data.length - ageOld;
+        const bpHigh = data.filter(d => d.trestbps > 130).length;
+        const bpNorm = data.length - bpHigh;
+        const ecgAbn = data.filter(d => d.restecg >= 1).length;
+        const ecgNorm = data.length - ecgAbn;
+        const cpSilent = data.filter(d => d.cp >= 3).length;
+        const cpSym = data.length - cpSilent;
+        const outcomePos = data.filter(d => d.target === 1).length;
+        const outcomeNeg = data.length - outcomePos;
+
+        const flow1 = ageGroup === '55+ 高龄暴露' ? ageOld : ageYoung;
+        const flow2 = ageGroup === '55+ 高龄暴露' ? ageOld * 0.6 : ageYoung * 0.3;
+        const flow3 = bpStatus === '高血压' ? bpHigh : bpNorm;
+        const flow4 = bpStatus === '高血压' ? bpHigh * 0.5 : bpNorm * 0.2;
+        const flow5 = ecgAbnormal === '异常心电图' ? ecgAbn : ecgNorm;
+        const flow6 = chestPain === '隐匿无症状胸痛' ? cpSilent : cpSym;
+        const flow7 = finalOutcome === '高危心脏病' ? outcomePos : outcomeNeg;
+
+        const dataNodes = [
+            { name: '55+ 高龄暴露', itemStyle: { color: PRIMARY_BLACK } },
+            { name: '55岁以下中青年', itemStyle: { color: TRANS_GREY } },
+            { name: '高血压', itemStyle: { color: CLINICAL_RED } },
+            { name: '血压正常区间', itemStyle: { color: CLINICAL_GREEN } },
+            { name: '异常心电图', itemStyle: { color: CLINICAL_RED } },
+            { name: '隐匿无症状胸痛', itemStyle: { color: '#d35400' } },
+            { name: '高危心脏病', itemStyle: { color: CLINICAL_RED } },
+            { name: '判定健康正常', itemStyle: { color: CLINICAL_GREEN } }
+        ];
+        const links = [
+            { source: '55+ 高龄暴露', target: '高血压', value: Math.round(flow1 * 0.7) },
+            { source: '55+ 高龄暴露', target: '异常心电图', value: Math.round(flow2) },
+            { source: '55岁以下中青年', target: '血压正常区间', value: Math.round(flow3 * 0.8) },
+            { source: '高血压', target: '异常心电图', value: Math.round(flow3 * 0.6) },
+            { source: '高血压', target: '隐匿无症状胸痛', value: Math.round(flow4 * 0.5) },
+            { source: '异常心电图', target: '高危心脏病', value: Math.round(flow5 * 0.7) },
+            { source: '隐匿无症状胸痛', target: '高危心脏病', value: Math.round(flow6 * 0.3) },
+            { source: '血压正常区间', target: '判定健康正常', value: Math.round(flow3 * 0.7) }
+        ];
+
+        sankeyChart.setOption({
+            backgroundColor: 'transparent',
+            series: [{
+                type: 'sankey',
+                layout: 'none',
+                nodeGap: 22,
+                nodeWidth: 16,
+                label: { fontSize: 11, fontWeight: 800, color: PRIMARY_BLACK },
+                lineStyle: { color: 'source', curveness: 0.5, opacity: 0.35 },
+                data: dataNodes,
+                links: links
+            }]
+        });
+    }
+
+    // ---------- 04 风险地形 ----------
+    function drawSurface(inputs) {
+        const dom = document.getElementById('chart-risk-surface');
+        if (!dom) return;
+        if (!surfaceChart) surfaceChart = echarts.init(dom);
+        surfaceChart.resize();
+
+        const ageAxis = [];
+        const cholAxis = [];
+        const matrix = [];
+        for (let a = 30; a <= 80; a += 2) ageAxis.push(a + '岁');
+        for (let c = 160; c <= 380; c += 10) cholAxis.push(c + 'mg/dL');
+
+        for (let i = 0; i < ageAxis.length; i++) {
+            for (let j = 0; j < cholAxis.length; j++) {
+                const curA = 30 + i * 2;
+                const curC = 160 + j * 10;
+                const testInputs = { ...inputs, age: curA, chol: curC };
+                const prob = computeRisk(testInputs);
+                matrix.push([i, j, prob]);
+            }
+        }
+
+        const userX = Math.min(Math.max(Math.round((inputs.age - 30) / 2), 0), ageAxis.length - 1);
+        const userY = Math.min(Math.max(Math.round((inputs.chol - 160) / 10), 0), cholAxis.length - 1);
+
+        surfaceChart.setOption({
+            backgroundColor: 'transparent',
+            tooltip: {
+                position: 'top',
+                formatter: function(p) {
+                    return '年龄 ' + (30 + p.value[0] * 2) + ' 岁, 胆固醇 ' + (160 + p.value[1] * 10) + ' mg/dL<br>高危概率: <b>' + p.value[2].toFixed(1) + '%</b>';
+                }
+            },
+            grid: { top: '6%', bottom: '6%', left: '8%', right: '4%', containLabel: true },
+            xAxis: {
+                type: 'category',
+                data: ageAxis,
+                axisLine: { lineStyle: { color: PRIMARY_BLACK, width: 1.5 } },
+                axisLabel: { fontSize: 10, color: PRIMARY_BLACK, fontWeight: 700 }
+            },
+            yAxis: {
+                type: 'category',
+                data: cholAxis,
+                axisLine: { lineStyle: { color: PRIMARY_BLACK, width: 1.5 } },
+                axisLabel: { fontSize: 10, color: PRIMARY_BLACK, fontWeight: 700 }
+            },
+            visualMap: {
+                show: true,
+                min: 10,
+                max: 90,
+                inRange: { color: [CLINICAL_GREEN, '#cbd0d8', CLINICAL_RED] },
+                text: ['高风险', '低风险'],
+                textStyle: { color: PRIMARY_BLACK, fontWeight: 700 },
+                left: 'left',
+                bottom: 10
+            },
+            series: [{
+                type: 'heatmap',
+                data: matrix,
+                itemStyle: { opacity: 0.92 },
+                label: {
+                    show: true,
+                    formatter: function(p) {
+                        return p.value[2].toFixed(0) + '%';
+                    },
+                    fontSize: 8,
+                    color: '#333'
+                },
+                markPoint: {
+                    symbol: 'circle',
+                    symbolSize: 14,
+                    itemStyle: { color: PRIMARY_BLACK, borderColor: '#ffffff', borderWidth: 2.5, shadowBlur: 8 },
+                    data: [{ coord: [userX, userY] }]
+                }
+            }]
+        });
+    }
+
+    // ---------- 05 气泡图（全中文标签） ----------
+    function drawBubble(inputs) {
+        const dom = document.getElementById('chart-ai-bubble');
+        if (!dom) return;
+        if (!bubbleChart) bubbleChart = echarts.init(dom);
+        bubbleChart.resize();
+
+        const sorted = FEATURE_NAMES.map(f => ({
+            name: f,
+            weight: corrWithTarget[f] || 0
+        })).sort(function(a, b) {
+            return b.weight - a.weight;
+        });
+
+        const data = sorted.map(function(item, idx) {
+            const isHigh = item.weight > 0.25;
+            const cnName = FEATURE_NAMES_CN[item.name] || item.name;
+            return {
+                value: [50 + (idx - 3) * 12, 50 + (idx % 2) * 20, 20 + item.weight * 80],
+                name: cnName + '\n|r|=' + item.weight.toFixed(2),
+                itemStyle: { color: isHigh ? CLINICAL_RED : TRANS_GREY }
+            };
+        });
+
+        bubbleChart.setOption({
+            backgroundColor: 'transparent',
+            tooltip: {
+                trigger: 'item',
+                formatter: function(p) {
+                    return p.name + '<br/>区分度: ' + p.value[2].toFixed(0);
+                }
+            },
+            xAxis: { show: false, min: 0, max: 100 },
+            yAxis: { show: false, min: 0, max: 100 },
+            series: [{
+                type: 'scatter',
+                data: data,
+                symbolSize: function(val) {
+                    return val[2];
+                },
+                label: {
+                    show: true,
+                    formatter: '{b}',
+                    position: 'inside',
+                    color: PRIMARY_BLACK,
+                    fontSize: 10,
+                    fontWeight: 700,
+                    lineHeight: 14
+                }
+            }]
+        });
+    }
+
+    // ---------- 06 UMAP 聚类 ----------
+    function drawTsne(inputs) {
+        const dom = document.getElementById('chart-tsne-cluster');
+        if (!dom) return;
+        if (!tsneChart) tsneChart = echarts.init(dom);
+        tsneChart.resize();
+
+        const clusterData = data.map(function(d) {
+            return {
+                x: d.age * 0.8 + d.trestbps * 0.2 + (Math.random() - 0.5) * 4,
+                y: d.thalach * 0.7 - d.oldpeak * 10 + (Math.random() - 0.5) * 5,
+                target: d.target
+            };
+        });
+        const healthyCluster = clusterData.filter(function(d) { return d.target === 0; });
+        const patientCluster = clusterData.filter(function(d) { return d.target === 1; });
+
+        const userX = inputs.age * 0.8 + inputs.trestbps * 0.2;
+        const userY = inputs.thalach * 0.7 - inputs.oldpeak * 10;
+
+        tsneChart.setOption({
+            backgroundColor: 'transparent',
+            grid: { left: '5%', right: '8%', top: '8%', bottom: '6%', containLabel: true },
+            tooltip: { trigger: 'item', backgroundColor: PRIMARY_BLACK, textStyle: { color: '#fff' } },
+            xAxis: {
+                name: 'PC1',
+                type: 'value',
+                axisLine: { lineStyle: { color: PRIMARY_BLACK, width: 1.5 } },
+                axisLabel: { color: PRIMARY_BLACK, fontWeight: 700 },
+                splitLine: { show: false }
+            },
+            yAxis: {
+                name: 'PC2',
+                type: 'value',
+                axisLine: { lineStyle: { color: PRIMARY_BLACK, width: 1.5 } },
+                axisLabel: { color: PRIMARY_BLACK, fontWeight: 700 },
+                splitLine: { show: false }
+            },
+            series: [
+                {
+                    name: '健康控制组',
+                    type: 'scatter',
+                    symbolSize: 6.5,
+                    itemStyle: { color: CLINICAL_GREEN, opacity: 0.7 },
+                    data: healthyCluster.map(function(d) { return [d.x, d.y]; })
+                },
+                {
+                    name: '确诊高危组',
+                    type: 'scatter',
+                    symbolSize: 6.5,
+                    itemStyle: { color: CLINICAL_RED, opacity: 0.7 },
+                    data: patientCluster.map(function(d) { return [d.x, d.y]; })
+                },
+                {
+                    name: '受试者位置',
+                    type: 'effectScatter',
+                    rippleEffect: { scale: 5, brushType: 'stroke', period: 2 },
+                    symbolSize: 15,
+                    itemStyle: { color: PRIMARY_BLACK, shadowBlur: 10 },
+                    data: [[userX, userY]],
+                    z: 999
+                }
+            ]
+        });
+    }
+
+    // ---------- 07 个体定位 ----------
+    function drawLocator(inputs) {
+        const dom = document.getElementById('chart-user-locator');
+        if (!dom) return;
+        if (!locatorChart) locatorChart = echarts.init(dom);
+        locatorChart.resize();
+
+        var healthyPoints = [];
+        var patientPoints = [];
+        for (var i = 0; i < 150; i++) {
+            healthyPoints.push([
+                25 + Math.random() * 45,
+                40 + Math.random() * 35
+            ]);
+            patientPoints.push([
+                55 + Math.random() * 35,
+                30 + Math.random() * 40
+            ]);
+        }
+        var userX = 55 + (inputs.age - 40) * 0.6 + (inputs.thalach - 150) * 0.1;
+        var userY = 45 + (inputs.oldpeak * 5) + (inputs.ca * 5);
+
+        locatorChart.setOption({
+            backgroundColor: 'transparent',
+            grid: { left: '5%', right: '8%', top: '8%', bottom: '6%', containLabel: true },
+            tooltip: { trigger: 'item', backgroundColor: PRIMARY_BLACK, textStyle: { color: '#fff' } },
+            xAxis: {
+                name: 'PC1',
+                type: 'value',
+                axisLine: { lineStyle: { color: PRIMARY_BLACK, width: 1.5 } },
+                splitLine: { show: true, lineStyle: { color: 'rgba(0,0,0,0.05)' } },
+                axisLabel: { color: PRIMARY_BLACK, fontWeight: 700 }
+            },
+            yAxis: {
+                name: 'PC2',
+                type: 'value',
+                axisLine: { lineStyle: { color: PRIMARY_BLACK, width: 1.5 } },
+                splitLine: { show: true, lineStyle: { color: 'rgba(0,0,0,0.05)' } },
+                axisLabel: { color: PRIMARY_BLACK, fontWeight: 700 }
+            },
+            series: [
+                {
+                    name: '健康组点云',
+                    type: 'scatter',
+                    symbolSize: 6,
+                    itemStyle: { color: 'rgba(16, 172, 132, 0.65)' },
+                    data: healthyPoints,
+                    animation: false
+                },
+                {
+                    name: '高危组点云',
+                    type: 'scatter',
+                    symbolSize: 6,
+                    itemStyle: { color: 'rgba(255, 51, 85, 0.7)' },
+                    data: patientPoints,
+                    animation: false
+                },
+                {
+                    name: '受试者位置',
+                    type: 'effectScatter',
+                    rippleEffect: { scale: 5.5, brushType: 'stroke', period: 2.5 },
+                    symbolSize: 15,
+                    itemStyle: { color: PRIMARY_BLACK, shadowBlur: 12, shadowColor: '#000' },
+                    data: [[userX, userY]],
+                    z: 999
+                }
+            ]
+        });
+    }
+
+    // ---------- 08 动态趋势 ----------
+    function drawSimulation(inputs) {
+        const dom = document.getElementById('chart-sim-trend');
+        if (!dom) return;
+        if (!simTrendChart) simTrendChart = echarts.init(dom);
+        simTrendChart.resize();
+
+        const ageSlider = document.getElementById('sim-input-age');
+        const cholSlider = document.getElementById('sim-input-chol');
+        const bpsSlider = document.getElementById('sim-input-trestbps');
+        const simAge = parseFloat(ageSlider?.value || inputs.age);
+        const simChol = parseFloat(cholSlider?.value || inputs.chol);
+        const simBps = parseFloat(bpsSlider?.value || inputs.trestbps);
+        document.getElementById('lbl-sim-age').innerText = simAge;
+        document.getElementById('lbl-sim-chol').innerText = simChol;
+        document.getElementById('lbl-sim-bps').innerText = simBps;
+
+        const timeline = ['当前', '期1', '期2', '期3', '期4', '期5'];
+        const curve = [];
+        for (var i = 0; i < 6; i++) {
+            const testInputs = {
+                ...inputs,
+                age: simAge + i * 1.6,
+                chol: simChol + i * 5.5,
+                trestbps: simBps + i * 2.5
+            };
+            curve.push(computeRisk(testInputs));
+        }
+
+        const isHigh = curve[5] > 55;
+        simTrendChart.setOption({
+            backgroundColor: 'transparent',
+            tooltip: {
+                trigger: 'axis',
+                backgroundColor: PRIMARY_BLACK,
+                textStyle: { color: '#fff' },
+                formatter: function(params) {
+                    const p = params[0];
+                    return p.axisValue + '<br/>风险概率: <b>' + p.value.toFixed(1) + '%</b>';
+                }
+            },
+            grid: { left: '5%', right: '6%', top: '8%', bottom: '8%', containLabel: true },
+            xAxis: {
+                type: 'category',
+                data: timeline,
+                axisLine: { lineStyle: { color: PRIMARY_BLACK, width: 1.5 } },
+                axisLabel: { color: PRIMARY_BLACK, fontWeight: 700 }
+            },
+            yAxis: {
+                type: 'value',
+                min: 0,
+                max: 100,
+                axisLabel: { formatter: '{value}%', color: PRIMARY_BLACK, fontWeight: 700 },
+                axisLine: { show: false },
+                splitLine: { lineStyle: { color: 'rgba(15,17,21,0.12)' } }
+            },
+            series: [{
+                name: '风险演化弧',
+                type: 'line',
+                smooth: true,
+                symbolSize: 8,
+                data: curve,
+                lineStyle: { width: 4, color: isHigh ? CLINICAL_RED : CLINICAL_GREEN },
+                itemStyle: { color: PRIMARY_BLACK },
+                areaStyle: {
+                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                        { offset: 0, color: isHigh ? 'rgba(255, 51, 85, 0.14)' : 'rgba(16, 172, 132, 0.14)' },
+                        { offset: 1, color: 'transparent' }
+                    ])
+                },
+                markLine: {
+                    silent: true,
+                    data: [{ yAxis: 55 }],
+                    lineStyle: { color: '#0f1115', type: 'dashed', width: 1.5 },
+                    label: { formatter: '警戒线 55%', color: '#0f1115', fontSize: 10, fontWeight: 700 }
+                },
+                label: {
+                    show: true,
+                    formatter: function(p) {
+                        return p.value.toFixed(1) + '%';
+                    },
+                    fontSize: 10,
+                    color: PRIMARY_BLACK,
+                    fontWeight: 700
+                }
+            }]
+        });
+    }
+
+    // ================================================================
+    // 6. 统一刷新
+    // ================================================================
+    let lastInputs = null;
+
+    function refreshAll(force) {
+        if (force === undefined) force = false;
+        const inputs = getInputs();
+        if (!force && lastInputs) {
+            var changed = false;
+            for (var k = 0; k < FEATURE_NAMES.length; k++) {
+                var f = FEATURE_NAMES[k];
+                if (inputs[f] !== lastInputs[f]) { changed = true; break; }
+            }
+            if (!changed) return;
+        }
+        lastInputs = { ...inputs };
+
+        const activePanel = document.querySelector('.theme-stage-panel.active');
+        if (!activePanel) return;
+        const panelId = activePanel.getAttribute('id').replace('panel-', '');
+
+        switch (panelId) {
+            case 'radar': drawRadar(inputs); break;
+            case 'network': drawNetwork(inputs); break;
+            case 'sankey': drawSankey(inputs); break;
+            case 'surface': drawSurface(inputs); break;
+            case 'bubble': drawBubble(inputs); break;
+            case 'tsne': drawTsne(inputs); break;
+            case 'locator': drawLocator(inputs); break;
+            case 'simulation': drawSimulation(inputs); break;
+            default: return;
+        }
+    }
+
+    // ================================================================
+    // 7. 事件绑定与轮询
+    // ================================================================
+    function setupEvents() {
+        var triggers = document.querySelectorAll('.theme-menu-list .menu-item');
+        var panels = document.querySelectorAll('.theme-stage-panel');
+
+        triggers.forEach(function(trigger) {
+            trigger.addEventListener('click', function() {
+                triggers.forEach(function(t) { t.classList.remove('active'); });
+                panels.forEach(function(p) { p.classList.remove('active'); });
+                trigger.classList.add('active');
+                var targetPanel = document.getElementById(trigger.getAttribute('data-target'));
+                if (targetPanel) {
+                    targetPanel.classList.add('active');
+                    setTimeout(function() {
+                        var charts = [radarChart, networkChart, sankeyChart, surfaceChart,
+                            bubbleChart, tsneChart, locatorChart, simTrendChart
+                        ];
+                        charts.forEach(function(c) { if (c) c.resize(); });
+                        refreshAll(true);
+                    }, 80);
+                }
+            });
+        });
+
+        ['sim-input-age', 'sim-input-chol', 'sim-input-trestbps'].forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('input', function() {
+                    if (document.getElementById('panel-simulation').classList.contains('active')) {
+                        refreshAll(true);
+                    }
+                });
+            }
+        });
+
+        window.addEventListener('resize', function() {
+            var charts = [radarChart, networkChart, sankeyChart, surfaceChart,
+                bubbleChart, tsneChart, locatorChart, simTrendChart
+            ];
+            charts.forEach(function(c) { if (c) c.resize(); });
+        });
+
+        setInterval(function() { refreshAll(false); }, 350);
+    }
+
+    var checkEcharts = setInterval(function() {
+        if (window.echarts) {
+            clearInterval(checkEcharts);
+            setupEvents();
+            setTimeout(function() { refreshAll(true); }, 150);
+        }
+    }, 30);
+})();
+</script>
+
+</body>
+</html>

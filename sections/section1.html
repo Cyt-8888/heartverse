@@ -1,0 +1,968 @@
+<div class="clinical-narrative-container">
+
+    <div class="biometric-input-sidebar">
+        <div class="narrative-header">
+            <div class="clinical-meta-line">
+                <span class="clinical-tag">临床发现档案</span>
+                <span class="authority-tag">数据来源：美国克利夫兰医学中心 (Cleveland Clinic)</span>
+            </div>
+            <h1 class="main-title">风险探索</h1>
+            <div class="accent-line" id="dynamic-accent-line"></div>
+            <p class="subtitle">请在下方微调患者的 13 项核心生理与病理指标。系统将基于原始清洗数据集的多维非线性交互边界，实时推演心血管疾病的潜在发生风险。</p>
+        </div>
+
+        <div class="matrix-pure-panel">
+            
+            <div class="biometric-row">
+                <div class="meta-label">
+                    <span class="index-idx">01</span>
+                    <label class="index-name" for="slider-age" id="label-age">患者实际年龄</label>
+                </div>
+                <div class="control-wrapper">
+                    <input type="range" id="slider-age" class="premium-slider" min="29" max="77" value="56" aria-labelledby="label-age" title="患者年龄滑块">
+                    <div class="value-badge">
+                        <input type="number" id="input-age" class="manual-input" min="29" max="77" value="56" aria-label="患者年龄数字输入" title="患者年龄精确值">
+                        <span class="unit-tag">岁</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="biometric-row">
+                <div class="meta-label">
+                    <span class="index-idx">02</span>
+                    <label class="index-name" id="label-sex">患者生理性别</label>
+                </div>
+                <div class="control-wrapper">
+                    <div class="premium-dropdown" data-target="sex">
+                        <div class="dropdown-selected"><span>男性</span><i class="triangle-icon"></i></div>
+                        <div class="dropdown-menu">
+                            <div class="dropdown-item" data-val="0">女性</div>
+                            <div class="dropdown-item active" data-val="1">男性</div>
+                        </div>
+                    </div>
+                    <input type="hidden" id="input-sex" value="1">
+                    <div class="value-badge"><span class="unit-tag">型</span></div>
+                </div>
+            </div>
+
+            <div class="biometric-row">
+                <div class="meta-label">
+                    <span class="index-idx">03</span>
+                    <label class="index-name" id="label-cp">胸痛临床病理表现</label>
+                </div>
+                <div class="control-wrapper">
+                    <div class="premium-dropdown" data-target="cp">
+                        <div class="dropdown-selected"><span>无症状</span><i class="triangle-icon"></i></div>
+                        <div class="dropdown-menu">
+                            <div class="dropdown-item" data-val="1">典型心绞痛（典型压迫感）</div>
+                            <div class="dropdown-item" data-val="2">非典型心绞痛（非典型胸痛）</div>
+                            <div class="dropdown-item" data-val="3">非心绞痛原因（刺痛/钝痛）</div>
+                            <div class="dropdown-item active" data-val="4">无症状（隐匿性/无痛）</div>
+                        </div>
+                    </div>
+                    <input type="hidden" id="input-cp" value="4">
+                    <div class="value-badge"><span class="unit-tag">阶</span></div>
+                </div>
+            </div>
+
+            <div class="biometric-row">
+                <div class="meta-label">
+                    <span class="index-idx">04</span>
+                    <label class="index-name" for="slider-trestbps" id="label-trestbps">静息血压（入院平卧测定）</label>
+                </div>
+                <div class="control-wrapper">
+                    <input type="range" id="slider-trestbps" class="premium-slider" min="94" max="200" value="130" aria-labelledby="label-trestbps" title="静息血压滑块">
+                    <div class="value-badge">
+                        <input type="number" id="input-trestbps" class="manual-input" min="94" max="200" value="130" aria-label="静息血压数字输入" title="静息血压精确值">
+                        <span class="unit-tag">mmHg</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="biometric-row">
+                <div class="meta-label">
+                    <span class="index-idx">05</span>
+                    <label class="index-name" for="slider-chol" id="label-chol">血清胆固醇（脂质沉积度）</label>
+                </div>
+                <div class="control-wrapper">
+                    <input type="range" id="slider-chol" class="premium-slider" min="126" max="564" value="240" aria-labelledby="label-chol" title="血清胆固醇滑块">
+                    <div class="value-badge">
+                        <input type="number" id="input-chol" class="manual-input" min="126" max="564" value="240" aria-label="血清胆固醇数字输入" title="血清胆固醇精确值">
+                        <span class="unit-tag">mg/dl</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="biometric-row">
+                <div class="meta-label">
+                    <span class="index-idx">06</span>
+                    <label class="index-name" id="label-fbs">空腹血糖水平</label>
+                </div>
+                <div class="control-wrapper">
+                    <div class="premium-dropdown" data-target="fbs">
+                        <div class="dropdown-selected"><span>正常（≤120 mg/dl）</span><i class="triangle-icon"></i></div>
+                        <div class="dropdown-menu">
+                            <div class="dropdown-item active" data-val="0">正常（≤120 mg/dl）</div>
+                            <div class="dropdown-item" data-val="1">偏高（&gt;120 mg/dl）</div>
+                        </div>
+                    </div>
+                    <input type="hidden" id="input-fbs" value="0">
+                    <div class="value-badge"><span class="unit-tag">糖</span></div>
+                </div>
+            </div>
+
+            <div class="biometric-row">
+                <div class="meta-label">
+                    <span class="index-idx">07</span>
+                    <label class="index-name" id="label-restecg">静息心电生理特征</label>
+                </div>
+                <div class="control-wrapper">
+                    <div class="premium-dropdown" data-target="restecg">
+                        <div class="dropdown-selected"><span>ST-T波异常</span><i class="triangle-icon"></i></div>
+                        <div class="dropdown-menu">
+                            <div class="dropdown-item" data-val="0">正常心电图</div>
+                            <div class="dropdown-item active" data-val="1">ST-T波异常（有心肌缺血表现）</div>
+                            <div class="dropdown-item" data-val="2">左心室肥大（Estes标准判定）</div>
+                        </div>
+                    </div>
+                    <input type="hidden" id="input-restecg" value="1">
+                    <div class="value-badge"><span class="unit-tag">电</span></div>
+                </div>
+            </div>
+
+            <div class="biometric-row">
+                <div class="meta-label">
+                    <span class="index-idx">08</span>
+                    <label class="index-name" for="slider-thalach" id="label-thalach">运动测试最大心率</label>
+                </div>
+                <div class="control-wrapper">
+                    <input type="range" id="slider-thalach" class="premium-slider" min="71" max="202" value="150" aria-labelledby="label-thalach" title="最大心率滑块">
+                    <div class="value-badge">
+                        <input type="number" id="input-thalach" class="manual-input" min="71" max="202" value="150" aria-label="最大心率数字输入" title="最大心率精确值">
+                        <span class="unit-tag">bpm</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="biometric-row">
+                <div class="meta-label">
+                    <span class="index-idx">09</span>
+                    <label class="index-name" id="label-exang">运动是否诱发心绞痛</label>
+                </div>
+                <div class="control-wrapper">
+                    <div class="premium-dropdown" data-target="exang">
+                        <div class="dropdown-selected"><span>未诱发（无症状）</span><i class="triangle-icon"></i></div>
+                        <div class="dropdown-menu">
+                            <div class="dropdown-item active" data-val="0">未诱发（运动时无痛）</div>
+                            <div class="dropdown-item" data-val="1">已诱发（运动出现绞痛）</div>
+                        </div>
+                    </div>
+                    <input type="hidden" id="input-exang" value="0">
+                    <div class="value-badge"><span class="unit-tag">痛</span></div>
+                </div>
+            </div>
+
+            <div class="biometric-row">
+                <div class="meta-label">
+                    <span class="index-idx">10</span>
+                    <label class="index-name" for="slider-oldpeak" id="label-oldpeak">心电图ST段下移幅度</label>
+                </div>
+                <div class="control-wrapper">
+                    <input type="range" id="slider-oldpeak" class="premium-slider" min="0.0" max="6.2" value="1.0" step="0.1" aria-labelledby="label-oldpeak" title="ST段下移幅值">
+                    <div class="value-badge">
+                        <input type="number" id="input-oldpeak" class="manual-input" min="0.0" max="6.2" value="1.0" step="0.1" aria-label="ST段下移数字输入" title="ST段下移精确值">
+                        <span class="unit-tag">mm</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="biometric-row">
+                <div class="meta-label">
+                    <span class="index-idx">11</span>
+                    <label class="index-name" id="label-slope">运动高峰ST段斜率趋势</label>
+                </div>
+                <div class="control-wrapper">
+                    <div class="premium-dropdown" data-target="slope">
+                        <div class="dropdown-selected"><span>上倾趋势</span><i class="triangle-icon"></i></div>
+                        <div class="dropdown-menu">
+                            <div class="dropdown-item active" data-val="1">上倾趋势（预后良好）</div>
+                            <div class="dropdown-item" data-val="2">平坦状态（临床中性意义）</div>
+                            <div class="dropdown-item" data-val="3">下倾趋势（高危风险）</div>
+                        </div>
+                    </div>
+                    <input type="hidden" id="input-slope" value="1">
+                    <div class="value-badge"><span class="unit-tag">斜</span></div>
+                </div>
+            </div>
+
+            <div class="biometric-row">
+                <div class="meta-label">
+                    <span class="index-idx">12</span>
+                    <label class="index-name" for="slider-ca" id="label-ca">透视显影主血管阻塞数</label>
+                </div>
+                <div class="control-wrapper">
+                    <input type="range" id="slider-ca" class="premium-slider" min="0" max="3" value="0" step="1" aria-labelledby="label-ca" title="染色血管数滑块">
+                    <div class="value-badge">
+                        <input type="number" id="input-ca" class="manual-input" min="0" max="3" value="0" aria-label="染色血管数数字输入" title="染色血管数精确值">
+                        <span class="unit-tag">根</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="biometric-row">
+                <div class="meta-label">
+                    <span class="index-idx">13</span>
+                    <label class="index-name" id="label-thal">心肌血流灌注特征（地贫表现）</label>
+                </div>
+                <div class="control-wrapper">
+                    <div class="premium-dropdown" data-target="thal">
+                        <div class="dropdown-selected"><span>血流完全正常</span><i class="triangle-icon"></i></div>
+                        <div class="dropdown-menu">
+                            <div class="dropdown-item active" data-val="3">血流完全正常</div>
+                            <div class="dropdown-item" data-val="6">固定缺陷（陈旧性坏死区）</div>
+                            <div class="dropdown-item" data-val="7">可逆性缺陷（负荷后缺血区）</div>
+                        </div>
+                    </div>
+                    <input type="hidden" id="input-thal" value="3">
+                    <div class="value-badge"><span class="unit-tag">灌</span></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="clinical-analytics-dashboard">
+        
+        <div class="macro-hud-gauge-space">
+            <div id="echarts-hud-globe"></div>
+            
+            <div class="hud-center-reporter">
+                <div class="hud-giant-percentage" id="live-risk-pct">0.0<span class="pct-sign">%</span></div>
+                <div class="hud-status-capsule" id="live-status-txt">计算中</div>
+            </div>
+        </div>
+
+        <div class="decision-waterfall-panel">
+            <div class="panel-meta-title">
+                <span class="title-main">13项病理表型对当前决策边界的即时边际贡献影响</span>
+                <span class="title-sub">实时交互：调整左侧任何体征项，右侧图表与全局系统主题色将立即重组重构。</span>
+            </div>
+            <div id="echarts-explainable-waterfall"></div>
+        </div>
+
+    </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js">
+</script>
+
+<style>
+    /* 基础框架与弹性视口配置 */
+    .clinical-narrative-container {
+        width: 100%;
+        min-height: 100vh;
+        display: flex;
+        align-items: stretch;
+        justify-content: space-between;
+        background: transparent;
+        padding: 40px 4%;
+        gap: 4%;
+        box-sizing: border-box;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    /* 左侧组件：体征控制塔（42%） */
+    .biometric-input-sidebar {
+        flex: 0 0 42%;
+        max-width: 560px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .narrative-header {
+        margin-bottom: 22px;
+    }
+    .clinical-meta-line {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        margin-bottom: 8px;
+    }
+    .narrative-header .clinical-tag {
+        font-family: 'Courier New', monospace;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 2px;
+        transition: color 0.3s;
+    }
+    .narrative-header .authority-tag {
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: #7a828e;
+        letter-spacing: 0.2px;
+    }
+    .narrative-header .main-title {
+        font-size: 1.85rem;
+        font-weight: 700;
+        color: #0f1115;
+        margin: 6px 0 10px 0;
+        letter-spacing: -0.5px;
+    }
+    .narrative-header .accent-line {
+        width: 35px;
+        height: 2px;
+        margin-bottom: 12px;
+        transition: background 0.3s;
+    }
+    .narrative-header .subtitle {
+        font-size: 0.86rem;
+        line-height: 1.6;
+        color: #555555;
+    }
+
+    /* 13项因数高透灰色悬浮舱舱（#eef0f6） */
+    .matrix-pure-panel {
+        flex: 1;
+        background: #eef0f6;
+        border: 1px solid rgba(0, 0, 0, 0.03);
+        border-radius: 16px;
+        padding: 18px 24px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 4px;
+        box-shadow: inset 0 1px 2px rgba(255,255,255,0.7), 0 12px 35px rgba(0,0,0,0.02);
+    }
+
+    /* 行对齐 */
+    .biometric-row {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-bottom: 7px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+    }
+    .biometric-row:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+
+    .meta-label {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex: 1;
+        padding-right: 15px;
+    }
+    .meta-label .index-idx {
+        font-family: 'Courier New', monospace;
+        font-size: 0.72rem;
+        color: #8c96a3;
+        font-weight: 700;
+    }
+    .meta-label .index-name {
+        font-size: 0.85rem;
+        color: #1e293b;
+        font-weight: 600;
+    }
+
+    .control-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        justify-content: flex-end;
+        flex: 0 0 240px;
+        /* 锁死右侧交互区总宽度，保证所有组件长度绝对一致 */
+    }
+
+    /* 核心参数绝对对齐：滑块与下拉菜单尺寸长度完全整齐一致 (160px) */
+    .premium-slider,
+    .premium-dropdown {
+        width: 160px !important;
+        box-sizing: border-box;
+    }
+
+    /* 电影级自适应拉伸进度条 */
+    .premium-slider {
+        -webkit-appearance: none;
+        appearance: none;
+        height: 3px;
+        background: rgba(0, 0, 0, 0.06);
+        border-radius: 2px;
+        outline: none;
+        background-repeat: no-repeat;
+        background-size: 0% 100%;
+        transition: background 0.2s;
+    }
+    .premium-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: #0f1115;
+        border: 2px solid #ffffff;
+        cursor: pointer;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+        transition: transform 0.1s ease;
+    }
+    .premium-slider::-webkit-slider-thumb:hover {
+        transform: scale(1.4);
+    }
+
+    /* 高级定制下拉菜单选择组件 */
+    .premium-dropdown {
+        position: relative;
+        height: 26px;
+        background: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: #334155;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .premium-dropdown:hover {
+        border-color: rgba(0, 0, 0, 0.15);
+    }
+    .dropdown-selected {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 8px;
+        height: 100%;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    .dropdown-selected span {
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        padding-right: 4px;
+    }
+    .triangle-icon {
+        width: 0;
+        height: 0;
+        border-left: 3.5px solid transparent;
+        border-right: 3.5px solid transparent;
+        border-top: 4.5px solid #64748b;
+        transition: transform 0.2s;
+    }
+    .premium-dropdown.open {
+        z-index: 99;
+    }
+    .premium-dropdown.open .triangle-icon {
+        transform: rotate(180deg);
+    }
+
+    /* 展开的菜单项列表 */
+    .dropdown-menu {
+        display: none;
+        position: absolute;
+        top: calc(100% + 4px);
+        right: 0;
+        width: 220px;
+        background: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.06);
+        border-radius: 6px;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06);
+        padding: 4px 0;
+        z-index: 100;
+    }
+    .premium-dropdown.open .dropdown-menu {
+        display: block;
+    }
+    .dropdown-item {
+        padding: 7px 12px;
+        color: #475569;
+        font-size: 0.75rem;
+        transition: all 0.15s;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+    .dropdown-item:hover,
+    .dropdown-item.active {
+        color: #ffffff !important;
+        font-weight: 600;
+    }
+
+    /* 精准数字输入框 */
+    .value-badge {
+        display: flex;
+        align-items: baseline;
+        gap: 2px;
+        min-width: 55px;
+        justify-content: flex-end;
+    }
+    .manual-input {
+        width: 32px;
+        border: none;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+        background: transparent;
+        font-family: 'Courier New', monospace;
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: #0f1115;
+        text-align: center;
+        outline: none;
+        padding: 0;
+        transition: border-bottom 0.15s;
+    }
+    .manual-input::-webkit-outer-spin-button,
+    .manual-input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    .unit-tag {
+        font-size: 0.65rem;
+        color: #94a3b8;
+        font-weight: 600;
+    }
+
+    /* 右侧组件：立体智绘大仪盘（54% ~ 58% 自适应弹性轴） */
+    .clinical-analytics-dashboard {
+        flex: 0 0 54%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 30px;
+    }
+
+    /* 全圆纯净高亮 HUD 面板（支持完备的跨设备响应式定位） */
+    .macro-hud-gauge-space {
+        position: relative;
+        flex: 1;
+        min-height: 410px;
+        background: transparent;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+    }
+    #echarts-hud-globe {
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 2;
+    }
+
+    /* 极致自适应响应式居中：完美将中央大数字锁定在 ECharts 圆环的最核心，绝不偏心错位 */
+    .hud-center-reporter {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        -webkit-transform: translate(-50%, -50%);
+        -moz-transform: translate(-50%, -50%);
+        -ms-transform: translate(-50%, -50%);
+        transform: translate(-50%, -50%);
+        z-index: 10;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        width: 100%;
+        pointer-events: none;
+        /* 防止遮挡图表层点击事件 */
+    }
+    .hud-giant-percentage {
+        font-family: 'Courier New', monospace;
+        font-size: 5.8rem;
+        font-weight: 200;
+        color: #0f1115;
+        line-height: 0.95;
+        letter-spacing: -2px;
+    }
+    .hud-giant-percentage .pct-sign {
+        font-size: 1.8rem;
+        color: #64748b;
+        font-weight: 200;
+        margin-left: -2px;
+    }
+
+    .hud-status-capsule {
+        margin-top: 14px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        padding: 4px 14px;
+        border-radius: 4px;
+        transition: all 0.3s;
+    }
+
+    /* 特征重要性分析板 */
+    .decision-waterfall-panel {
+        height: 260px;
+        background: transparent;
+        border-top: 1px solid rgba(0, 0, 0, 0.05);
+        padding-top: 18px;
+    }
+    .panel-meta-title .title-main {
+        display: block;
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #0f1115;
+    }
+    .panel-meta-title .title-sub {
+        display: block;
+        font-size: 0.74rem;
+        color: #7a828e;
+        margin-top: 4px;
+        line-height: 1.4;
+    }
+    #echarts-explainable-waterfall {
+        width: 100%;
+        height: 210px;
+    }
+
+    /* 全媒体响应式设计断点 */
+    @media (max-width: 1150px) {
+        .clinical-narrative-container {
+            flex-direction: column;
+            gap: 40px;
+            padding: 30px 2%;
+        }
+        .biometric-input-sidebar,
+        .clinical-analytics-dashboard {
+            flex: 0 0 100%;
+            max-width: 100%;
+        }
+        .macro-hud-gauge-space {
+            min-height: 380px;
+        }
+        .hud-giant-percentage {
+            font-size: 5rem;
+        }
+    }
+</style>
+
+<script>
+    (function() {
+        let internalWeights = null;
+        let globeGaugeChart = null;
+        let waterfallChart = null;
+
+        const featureProfile = {
+            age: '患者实际年龄',
+            sex: '性别生理指数',
+            cp: '胸痛临床表现',
+            trestbps: '入院静息血压',
+            chol: '血清胆固醇',
+            fbs: '空腹血糖水平',
+            restecg: '静息心电特征',
+            thalach: '极限测试心率',
+            exang: '运动诱发绞痛',
+            oldpeak: '心电图ST下移',
+            slope: '高峰ST段斜率',
+            ca: '主血管阻塞数',
+            thal: '心肌血流特征'
+        };
+
+        function getDynamicColor(score) {
+            return score >= 50 ? '#ff3355' : '#10ac84';
+        }
+
+        function updateSliderFill(slider, activeColor) {
+            if (!slider) return;
+            const min = parseFloat(slider.min) || 0;
+            const max = parseFloat(slider.max) || 100;
+            const val = parseFloat(slider.value) || 0;
+            const percentage = ((val - min) / (max - min)) * 100;
+
+            slider.style.backgroundImage = 'linear-gradient(' + activeColor + ', ' + activeColor + ')';
+            slider.style.backgroundSize = percentage + '% 100%';
+        }
+
+        function computeRiskInference() {
+            if (!internalWeights) return;
+
+            var features = ['age', 'sex', 'cp', 'trestbps', 'chol', 'fbs', 'restecg', 'thalach', 'exang', 'oldpeak', 'slope',
+                'ca', 'thal'
+            ];
+            var currentVals = {};
+
+            features.forEach(function(f) {
+                var el = document.getElementById('input-' + f);
+                currentVals[f] = el ? (parseFloat(el.value) || 0) : 0;
+            });
+
+            var scoreLogOdds = internalWeights.intercept;
+            var shapiros = [];
+
+            internalWeights.feature_names.forEach(function(name, idx) {
+                var raw = currentVals[name];
+                var normalized = (raw - internalWeights.scaler_mean[idx]) / internalWeights.scaler_scale[idx];
+                var weight = internalWeights.coefficients[idx];
+                var contribution = normalized * weight;
+
+                scoreLogOdds += contribution;
+                shapiros.push({ key: name, val: contribution });
+            });
+
+            var prob = 1 / (1 + Math.exp(-scoreLogOdds));
+            var finalPct = prob * 100;
+            var globalActiveColor = getDynamicColor(finalPct);
+
+            var lineEl = document.getElementById('dynamic-accent-line');
+            if (lineEl) lineEl.style.background = globalActiveColor;
+
+            var tagEl = document.querySelector('.narrative-header .clinical-tag');
+            if (tagEl) tagEl.style.color = globalActiveColor;
+
+            var continuousKeys = ['age', 'trestbps', 'chol', 'thalach', 'oldpeak', 'ca'];
+            continuousKeys.forEach(function(key) {
+                var slider = document.getElementById('slider-' + key);
+                var input = document.getElementById('input-' + key);
+                if (input) input.style.borderBottomColor = globalActiveColor;
+                updateSliderFill(slider, globalActiveColor);
+            });
+
+            document.documentElement.style.setProperty('--dropdown-active-theme', globalActiveColor);
+
+            renderDashboardHUD(finalPct.toFixed(1), shapiros, globalActiveColor);
+        }
+
+        function initChartsSpace() {
+            var globeDom = document.getElementById('echarts-hud-globe');
+            var waterfallDom = document.getElementById('echarts-explainable-waterfall');
+            if (!globeDom || !waterfallDom) return;
+
+            globeGaugeChart = echarts.init(globeDom);
+            waterfallChart = echarts.init(waterfallDom);
+
+            window.addEventListener('resize', function() {
+                if (globeGaugeChart) globeGaugeChart.resize();
+                if (waterfallChart) waterfallChart.resize();
+            });
+        }
+
+        function renderDashboardHUD(riskScore, shapiros, themeColor) {
+            var pctBox = document.getElementById('live-risk-pct');
+            var statusBox = document.getElementById('live-status-txt');
+
+            if (pctBox) pctBox.innerHTML = riskScore + '<span class="pct-sign">%</span>';
+
+            if (statusBox) {
+                if (parseFloat(riskScore) < 50) {
+                    statusBox.textContent = '低风险 · 安全状态';
+                    statusBox.style.color = '#10ac84';
+                    statusBox.style.background = 'rgba(16, 172, 132, 0.06)';
+                } else {
+                    statusBox.textContent = '高风险 · 预警状态';
+                    statusBox.style.color = '#ff3355';
+                    statusBox.style.background = 'rgba(255, 51, 85, 0.06)';
+                }
+            }
+
+            var globeOption = {
+                series: [{
+                    type: 'gauge',
+                    startAngle: 90,
+                    endAngle: -270,
+                    radius: '85%',
+                    pointer: { show: false },
+                    axisLine: { lineStyle: { width: 1, color: [
+                                [1, 'rgba(0,0,0,0.02)']
+                            ] } },
+                    splitLine: { show: false },
+                    axisTick: { show: false },
+                    axisLabel: { show: false },
+                    detail: { show: false }
+                }, {
+                    type: 'gauge',
+                    startAngle: 90,
+                    endAngle: -270,
+                    radius: '78%',
+                    min: 0,
+                    max: 100,
+                    pointer: { show: false },
+                    progress: {
+                        show: true,
+                        roundCap: true,
+                        width: 5,
+                        itemStyle: {
+                            color: themeColor,
+                            shadowBlur: 12,
+                            shadowColor: themeColor
+                        }
+                    },
+                    axisLine: { lineStyle: { width: 5, color: [
+                                [1, 'rgba(0,0,0,0.01)']
+                            ] } },
+                    splitLine: { show: false },
+                    axisTick: { show: false },
+                    axisLabel: { show: false },
+                    detail: { show: false },
+                    data: [{ value: parseFloat(riskScore) }]
+                }]
+            };
+
+            var sortedDesc = shapiros
+                .filter(function(item) { return featureProfile[item.key]; })
+                .sort(function(a, b) { return Math.abs(b.val) - Math.abs(a.val); });
+
+            var categories = sortedDesc.map(function(item) { return featureProfile[item.key]; }).reverse();
+            var metricsData = sortedDesc.map(function(item) { return item.val.toFixed(3); }).reverse();
+
+            var waterfallOption = {
+                grid: { left: '2%', right: '12%', top: '2%', bottom: '2%', containLabel: true },
+                tooltip: {
+                    trigger: 'axis',
+                    backgroundColor: 'rgba(15, 17, 21, 0.95)',
+                    borderColor: 'transparent',
+                    textStyle: { color: '#ffffff', fontSize: 11 },
+                    axisPointer: { type: 'shadow' }
+                },
+                xAxis: { type: 'value', show: false },
+                yAxis: {
+                    type: 'category',
+                    data: categories,
+                    axisLine: { show: false },
+                    axisTick: { show: false },
+                    axisLabel: { color: '#1e293b', fontSize: 11, fontWeight: 600, margin: 12 }
+                },
+                series: [{
+                    type: 'bar',
+                    data: metricsData,
+                    barWidth: 4,
+                    label: {
+                        show: true,
+                        position: 'right',
+                        formatter: function(p) { return p.value > 0 ? '+' + p.value : p.value; },
+                        color: '#475569',
+                        fontSize: 10,
+                        fontFamily: 'monospace',
+                        fontWeight: 600
+                    },
+                    itemStyle: {
+                        color: function(p) { return p.value > 0 ? '#ff3355' : '#10ac84'; },
+                        borderRadius: 2
+                    }
+                }]
+            };
+
+            if (globeGaugeChart) globeGaugeChart.setOption(globeOption);
+            if (waterfallChart) waterfallChart.setOption(waterfallOption);
+        }
+
+        function bindInterfaceInteractions() {
+            var continuousKeys = ['age', 'trestbps', 'chol', 'thalach', 'oldpeak', 'ca'];
+            continuousKeys.forEach(function(key) {
+                var slider = document.getElementById('slider-' + key);
+                var input = document.getElementById('input-' + key);
+
+                if (slider && input) {
+                    slider.addEventListener('input', function() {
+                        input.value = slider.value;
+                        computeRiskInference();
+                    });
+
+                    input.addEventListener('input', function() {
+                        var val = parseFloat(input.value) || 0;
+                        if (val < parseFloat(slider.min)) val = parseFloat(slider.min);
+                        if (val > parseFloat(slider.max)) val = parseFloat(slider.max);
+                        slider.value = val;
+                        computeRiskInference();
+                    });
+                }
+            });
+
+            document.querySelectorAll('.premium-dropdown').forEach(function(dropdown) {
+                var selectedWrapper = dropdown.querySelector('.dropdown-selected');
+                var targetId = dropdown.getAttribute('data-target');
+                var hiddenInput = document.getElementById('input-' + targetId);
+
+                if (selectedWrapper) {
+                    selectedWrapper.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        document.querySelectorAll('.premium-dropdown').forEach(function(d) {
+                            if (d !== dropdown) d.classList.remove('open');
+                        });
+                        dropdown.classList.toggle('open');
+                    });
+                }
+
+                dropdown.querySelectorAll('.dropdown-item').forEach(function(item) {
+                    item.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        dropdown.querySelectorAll('.dropdown-item').forEach(function(i) {
+                            i.classList.remove('active');
+                        });
+                        item.classList.add('active');
+
+                        if (selectedWrapper && selectedWrapper.querySelector('span')) {
+                            selectedWrapper.querySelector('span').textContent = item.textContent;
+                        }
+                        dropdown.classList.remove('open');
+
+                        if (hiddenInput) {
+                            hiddenInput.value = item.getAttribute('data-val');
+                            computeRiskInference();
+                        }
+                    });
+                });
+            });
+
+            document.addEventListener('click', function() {
+                document.querySelectorAll('.premium-dropdown').forEach(function(d) {
+                    d.classList.remove('open');
+                });
+            });
+        }
+
+        function bootApplication() {
+            initChartsSpace();
+            bindInterfaceInteractions();
+
+            var styleEl = document.createElement('style');
+            styleEl.innerHTML =
+                '.dropdown-item:hover { background: var(--dropdown-active-theme, #10ac84) !important; } .dropdown-item.active { background: var(--dropdown-active-theme, #10ac84) !important; }';
+            document.head.appendChild(styleEl);
+
+            fetch('js/model_assets.json')
+                .then(function(res) { return res.json(); })
+                .then(function(data) {
+                    internalWeights = data;
+                    computeRiskInference();
+                })
+                .catch(function() {
+                    internalWeights = {
+                        intercept: -0.42,
+                        feature_names: ['age', 'sex', 'cp', 'trestbps', 'chol', 'fbs', 'restecg', 'thalach',
+                            'exang', 'oldpeak', 'slope', 'ca', 'thal'
+                        ],
+                        scaler_mean: [54.3, 0.68, 3.15, 131.6, 246.2, 0.14, 0.52, 149.6, 0.32, 1.03, 1.6, 0.66,
+                            4.7
+                        ],
+                        scaler_scale: [9.0, 0.46, 0.95, 17.5, 51.7, 0.35, 0.52, 22.8, 0.46, 1.16, 0.6, 0.93,
+                            1.9
+                        ],
+                        coefficients: [0.14, 0.38, 0.45, 0.21, 0.05, 0.01, 0.15, -0.36, 0.44, 0.51, 0.25, 0.62,
+                            0.65
+                        ]
+                    };
+                    computeRiskInference();
+                });
+        }
+
+        if (window.echarts) {
+            bootApplication();
+        } else {
+            var poll = setInterval(function() {
+                if (window.echarts) {
+                    clearInterval(poll);
+                    bootApplication();
+                }
+            }, 20);
+        }
+    })();
+</script>

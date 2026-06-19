@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CardioLens - 心血管健康数字孪生系统</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
+    
+    <style>
+        /* ===================================================
+           🎨 专属优化：高级工业级学术版尾样式表（零报错穿透设计）
+           =================================================== */
+        .premium-academic-footer {
+            width: 100%;
+            background: transparent;
+            -webkit-backdrop-filter: blur(8px);
+            backdrop-filter: blur(8px);
+            border-top: 1px dashed rgba(15, 17, 21, 0.12);
+            padding: 100px 6% 30px 6%;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            margin-top: 0; /* 移除超大外边距，防止断层过多 */
+            position: relative;
+            z-index: 10;
+            
+        }
+
+        /* 四列非对称布局矩阵 */
+        .footer-matrix-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 30px;
+            width: 100%;
+        }
+
+        .footer-column-node {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .footer-column-node .column-badge {
+            font-family: monospace;
+            font-size: 0.7rem;
+            font-weight: 800;
+            color: #ff3355;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .footer-column-node .column-title {
+            font-size: 0.95rem;
+            font-weight: 900;
+            color: #0f1115;
+            margin: 0;
+            letter-spacing: -0.3px;
+        }
+
+        .footer-column-node .column-desc-text {
+            font-size: 0.8rem;
+            line-height: 1.6;
+            color: #444444;
+            text-align: justify;
+            margin: 0;
+        }
+
+        .footer-column-node .column-desc-text strong {
+            color: #0f1115;
+            font-weight: 700;
+        }
+
+        /* 统一的学术型原子标签链 */
+        .footer-tag-cloud {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .footer-atomic-tag {
+            background: rgba(15, 17, 21, 0.03);
+            border: 1px solid rgba(15, 17, 21, 0.05);
+            padding: 4px 8px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #555555;
+            border-radius: 2px;
+        }
+
+        /* 版权与工程声明底座 */
+        .footer-baseline-bar {
+            border-top: 1px solid rgba(15, 17, 21, 0.06);
+            padding-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .footer-baseline-bar .copyright-text {
+            font-size: 0.76rem;
+            font-weight: 600;
+            color: #747d8c;
+            margin: 0;
+        }
+
+        .footer-baseline-bar .statement-links {
+            display: flex;
+            gap: 20px;
+        }
+
+        .footer-baseline-bar .statement-links a {
+            font-size: 0.74rem;
+            font-weight: 700;
+            color: #0f1115;
+            text-decoration: none;
+            opacity: 0.6;
+            transition: opacity 0.2s ease;
+        }
+
+        .footer-baseline-bar .statement-links a:hover {
+            opacity: 1;
+        }
+
+        /* 极致的移动端弹性塌陷响应 */
+        @media (max-width: 768px) {
+            .premium-academic-footer { padding: 30px 20px 20px 20px; gap: 20px; }
+            .footer-matrix-grid { grid-template-columns: 1fr; gap: 25px; }
+            .footer-baseline-bar { flex-direction: column; align-items: flex-start; gap: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="bg-particle-canvas"></canvas>
+
+    <nav class="navbar">
+        <div class="logo">
+            <img src="img/logo.svg" alt="心视界徽标" class="logo-img">
+            <span class="logo-text">心视界</span>
+        </div>
+        <ul class="nav-links">
+            <li><a href="#home" class="active" aria-label="探索首页">首页</a></li>
+            <li><a href="#section1" aria-label="查看数据统计">风险探索</a></li>
+            <li><a href="#section2" aria-label="了解科研成果">数据探索</a></li>
+            <li><a href="#section3" aria-label="阅读预防医学">模型说明</a></li>
+            <li><a href="#section4" aria-label="查看患者故事">健康建议</a></li>
+        </ul>
+    </nav>
+
+    <div class="vertical-progress-bar">
+        <span class="progress-num top-num">01</span>
+        <div class="track-line">
+            <div class="active-progress-line"></div>
+            <div class="dots-container">
+                <a href="#home" class="v-dot active" aria-label="查看第一屏探索首页"></a>
+                <a href="#section1" class="v-dot" aria-label="查看第二屏数据明细"></a>
+                <a href="#section2" class="v-dot" aria-label="查看第三屏孪生技术"></a>
+                <a href="#section3" class="v-dot" aria-label="查看第四屏风险预测"></a>
+                <a href="#section4" class="v-dot" aria-label="查看第五屏生命叙事"></a>
+            </div>
+        </div>
+        <span class="progress-num bottom-num">05</span>
+    </div>
+
+    <main>
+        <section id="home" class="screen"></section>
+        <section id="section1" class="screen"></section>
+        <section id="section2" class="screen"></section>
+        <section id="section3" class="screen"></section>
+        <section id="section4" class="screen"></section>
+        
+        <footer class="premium-academic-footer">
+            <div class="footer-matrix-grid">
+                <div class="footer-column-node">
+                    <span class="column-badge">DATA PROVENANCE</span>
+                    <h3 class="column-title">临床数据来源</h3>
+                    <p class="column-desc-text">
+                        来自机器学习库（UCI Machine Learning Repository）收录的经典<strong>美国克利夫兰医学中心（Cleveland Clinic）心血管疾病临床数据集</strong>。
+                        <br>该数据集包含 303 例真实患者样本空间，覆盖了从静息血压、血脂矩阵到运动心电电生理、放射性造影等 13 项极具熵纯度的核心无创/创伤性生物表型特征变量。
+                    </p>
+                </div>
+
+                <div class="footer-column-node">
+                    <span class="column-badge">SECURITY & PRIVACY</span>
+                    <h3 class="column-title">安全合规与脱敏说明</h3>
+                    <p class="column-desc-text">
+                        已经对受试病例数据执行了严苛的<strong>双重去标识化（De-identification）与区间打散处理</strong>，全面剔除了包含姓名、社保编号、就诊流水号及高精度地理定位等在内的直接标识符。
+                        <br>同时，为了防范针对高维流形超平面的逆向数理推演攻击，系统对连续型指标施加了边界扰动，符合临床医疗信息安全和伦理审计规范。
+                    </p>
+                </div>
+
+                <div class="footer-column-node">
+                    <span class="column-badge">CLIENT COMPUTING</span>
+                    <h3 class="column-title">前端沙盒零痕迹审计</h3>
+                    <p class="column-desc-text">
+                        系统采用纯<strong>前端沙盒化本地推演技术（Client-Side Sandbox）</strong>。用户在 Section 1 “病理表型矩阵”中微调或输入的任何数据，其多项式 Logistic 激活演算与 Section 2 的高阶雷达图拓扑投影均 100% 运行于浏览器前端内存中。系统底层未部署任何服务端日志拦截、埋点上传或影子数据库回传探针，确保操作绝对隐私安全。
+                    </p>
+                </div>
+
+                <div class="footer-column-node">
+                    <span class="column-badge">ARCHITECTURAL BACKBONE</span>
+                    <h3 class="column-title">可解释人工智能底座</h3>
+                    <div class="footer-tag-cloud">
+                        <span class="footer-atomic-tag">ONNX Runtime</span>
+                        <span class="footer-atomic-tag">Logistic Regression</span>
+                        <span class="footer-atomic-tag">Three.js WebGL</span>
+                        <span class="footer-atomic-tag">ECharts</span>
+                        <span class="footer-atomic-tag">XAI Clinical Audit</span>
+                        <span class="footer-atomic-tag">HTML5 Local Bus</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer-baseline-bar">
+                <p class="copyright-text">
+                    © 2026 心视界 CardioLens. PulseEcho 临床数据探索与决策溯源数字孪生实验室. 保留所有权利.
+                </p>
+                <div class="statement-links">
+                    <a href="#section3" aria-label="阅读算法鲁棒性审计">算法审计规范</a>
+                    <a href="#section4" aria-label="了解免责条款细则">临床免责声明</a>
+                </div>
+            </div>
+        </footer>
+    </main>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

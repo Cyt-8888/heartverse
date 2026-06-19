@@ -1,0 +1,1360 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PulseEcho - AI 决策溯源与临床可解释性审计</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: transparent;
+            color: #0f1115;
+            -webkit-font-smoothing: antialiased;
+        }
+        .xai-container {
+            width: 100%;
+            min-height: 100vh;
+            padding: 30px 2%;
+            background: transparent;
+            
+        }
+
+        /* 顶部标题 */
+        .xai-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            border-bottom: 2px solid #0f1115;
+            padding-bottom: 16px;
+            margin-bottom: 28px;
+        }
+        .xai-header-left .meta {
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            font-weight: 800;
+            color: #ff3355;
+            letter-spacing: 2px;
+        }
+        .xai-header-left h1 {
+            font-size: 1.85rem;
+            font-weight: 700;
+            margin: 6px 0 10px 0;
+            letter-spacing: -0.5px;
+        }
+        .xai-header-left p {
+            font-size: 0.85rem;
+            color: #444;
+        }
+        .xai-scoreboard {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(15,17,21,0.04);
+            border: 1px solid rgba(15,17,21,0.1);
+            padding: 8px 20px;
+            border-radius: 6px;
+        }
+        .xai-scoreboard .label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #444;
+            text-align: right;
+            line-height: 1.3;
+        }
+        .xai-scoreboard .value {
+            font-size: 2.8rem;
+            font-weight: 900;
+            color: #ff3355;
+            font-family: 'Impact', sans-serif;
+            line-height: 1;
+        }
+        .xai-scoreboard .unit {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #ff3355;
+        }
+
+        /* Tab 导航 */
+        .xai-tabs {
+            display: flex;
+            gap: 8px;
+            border-bottom: 1px solid rgba(15,17,21,0.1);
+            padding-bottom: 0;
+            margin-bottom: 24px;
+        }
+        .xai-tab {
+            flex: 1;
+            padding: 12px 16px;
+            background: rgba(15,17,21,0.02);
+            border: 1px solid rgba(15,17,21,0.06);
+            border-bottom: none;
+            border-radius: 6px 6px 0 0;
+            cursor: pointer;
+            transition: all 0.25s;
+            text-align: center;
+        }
+        .xai-tab .idx {
+            font-family: monospace;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #747d8c;
+            display: block;
+        }
+        .xai-tab .label {
+            font-size: 0.92rem;
+            font-weight: 800;
+            color: #0f1115;
+        }
+        .xai-tab:hover {
+            background: rgba(15,17,21,0.05);
+        }
+        .xai-tab.active {
+            background: rgba(15,17,21,0.04);
+            border-top: 3px solid #0f1115;
+            border-left: 1px solid rgba(15,17,21,0.15);
+            border-right: 1px solid rgba(15,17,21,0.15);
+            padding-top: 10px;
+        }
+        .xai-tab.active:nth-child(1) { border-top-color: #0f1115; }
+        .xai-tab.active:nth-child(2) { border-top-color: #ff3355; }
+        .xai-tab.active:nth-child(3) { border-top-color: #0055cc; }
+        .xai-tab.active:nth-child(4) { border-top-color: #10ac84; }
+        .xai-tab.active:nth-child(5) { border-top-color: #747d8c; }
+
+        /* 面板容器 */
+        .xai-panels {
+            position: relative;
+        }
+        .xai-panel {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+        .xai-panel.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .panel-chart-wrapper {
+            background: rgba(238, 240, 246, 0.8);
+            border: 1px solid rgba(15,17,21,0.08);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+        .panel-chart-wrapper .chart-box {
+            width: 100%;
+            height: 460px;
+        }
+        .panel-footer {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px 28px;
+            padding: 12px 0 0 0;
+            border-top: 1px dashed rgba(15,17,21,0.1);
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #0f1115;
+        }
+        .panel-footer .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .legend-color {
+            width: 14px;
+            height: 14px;
+            border-radius: 3px;
+        }
+
+        /* 反事实控制区 */
+        .cf-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px 40px;
+            background: rgba(15,17,21,0.03);
+            border-radius: 6px;
+            padding: 16px 20px;
+            margin-bottom: 16px;
+            border: 1px solid rgba(15,17,21,0.06);
+        }
+        .cf-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex: 1;
+            min-width: 180px;
+        }
+        .cf-group label {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #0f1115;
+        }
+        .cf-group .cf-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: #444;
+        }
+        .cf-group .cf-meta .target {
+            color: #10ac84;
+            font-weight: 800;
+            font-family: monospace;
+        }
+        .cf-range {
+            width: 100%;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 5px;
+            background: rgba(15,17,21,0.12);
+            border-radius: 3px;
+            outline: none;
+        }
+        .cf-range::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #0f1115;
+            border: 2px solid #fff;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        }
+        .cf-range::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            background: #10ac84;
+        }
+
+        /* 近邻表格 */
+        .knn-table-wrap {
+            overflow-x: auto;
+            max-height: 380px;
+            overflow-y: auto;
+            border-radius: 6px;
+            border: 1px solid rgba(15,17,21,0.06);
+        }
+        .knn-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+        }
+        .knn-table th {
+            background: rgba(15,17,21,0.04);
+            font-weight: 800;
+            color: #747d8c;
+            padding: 8px 10px;
+            border-bottom: 2px solid #0f1115;
+            text-transform: uppercase;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+        .knn-table td {
+            padding: 8px 10px;
+            border-bottom: 1px solid rgba(15,17,21,0.05);
+            font-weight: 600;
+        }
+        .knn-table tr.pos { background: rgba(255,51,85,0.03); }
+        .knn-table tr.neg { background: rgba(16,172,132,0.03); }
+        .badge {
+            font-size: 0.7rem;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 12px;
+            display: inline-block;
+        }
+        .badge.pos { background: rgba(255,51,85,0.15); color: #ff3355; }
+        .badge.neg { background: rgba(16,172,132,0.15); color: #10ac84; }
+
+        @media (max-width: 1024px) {
+            .xai-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+            .xai-scoreboard { align-self: flex-start; }
+            .xai-tab { flex: 1 1 auto; }
+        }
+        @media (max-width: 768px) {
+            .xai-tabs { flex-wrap: wrap; }
+            .xai-tab { flex: 1 1 45%; }
+            .panel-chart-wrapper .chart-box { height: 340px; }
+        }
+    </style>
+</head>
+<body>
+<div class="xai-container">
+
+    <!-- 头部 -->
+    <header class="xai-header">
+        <div class="xai-header-left">
+            <span class="meta">可解释人工智能 · 临床可解释性审计</span>
+            <h1>模型说明</h1>
+            <p>基于逻辑回归模型及真实克利夫兰数据集，实时解译每一例预测背后的推演逻辑</p>
+        </div>
+        <div class="xai-scoreboard">
+            <span class="label">当前<br>风险概率</span>
+            <span class="value" id="global-risk">78</span>
+            <span class="unit">%</span>
+        </div>
+    </header>
+
+    <!-- Tab 导航 -->
+    <nav class="xai-tabs" id="tabContainer">
+        <div class="xai-tab active" data-target="panel0"><span class="idx">审计 01</span><span class="label">SHAP 归因</span></div>
+        <div class="xai-tab" data-target="panel1"><span class="idx">审计 02</span><span class="label">风险平衡</span></div>
+        <div class="xai-tab" data-target="panel2"><span class="idx">审计 03</span><span class="label">近邻循证</span></div>
+        <div class="xai-tab" data-target="panel3"><span class="idx">审计 04</span><span class="label">反事实模拟</span></div>
+        <div class="xai-tab" data-target="panel4"><span class="idx">审计 05</span><span class="label">模型性能 (ROC)</span></div>
+    </nav>
+
+    <!-- 面板容器 -->
+    <div class="xai-panels">
+
+        <!-- ========== 面板 0：SHAP 归因 ========== -->
+        <div class="xai-panel active" id="panel0">
+            <div class="panel-chart-wrapper">
+                <div class="chart-box" id="chart-shap"></div>
+                <div class="panel-footer">
+                    <span class="legend-item"><span class="legend-color" style="background:#0f1115;"></span> 基线 / 终点</span>
+                    <span class="legend-item"><span class="legend-color" style="background:#ff3355;"></span> 正向风险推高</span>
+                    <span class="legend-item"><span class="legend-color" style="background:#10ac84;"></span> 负向保护对冲</span>
+                    <span style="margin-left:auto; color:#747d8c;">每个特征对最终概率的边际贡献</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== 面板 1：风险平衡 ========== -->
+        <div class="xai-panel" id="panel1">
+            <div class="panel-chart-wrapper">
+                <div class="chart-box" id="chart-force"></div>
+                <div class="panel-footer">
+                    <span class="legend-item"><span class="legend-color" style="background:#10ac84;"></span> 保护因素 (降低风险)</span>
+                    <span class="legend-item"><span class="legend-color" style="background:#ff3355;"></span> 风险因素 (推高风险)</span>
+                    <span style="margin-left:auto; color:#747d8c;">红色/绿色条长度代表影响幅度</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== 面板 2：近邻循证 ========== -->
+        <div class="xai-panel" id="panel2">
+            <div class="panel-chart-wrapper" style="padding-bottom:0;">
+                <div style="margin-bottom:12px; font-size:0.85rem; font-weight:600; color:#0f1115;">
+                    ⚕️ 与当前输入最相似的真实病例 (基于欧氏距离)
+                </div>
+                <div class="knn-table-wrap">
+                    <table class="knn-table" id="knnTable">
+                        <thead><tr><th>病例ID</th><th>年龄</th><th>静息血压</th><th>总胆固醇</th><th>最大心率</th><th>ST段压低</th><th>血管数</th><th>真实结局</th></tr></thead>
+                        <tbody id="knnBody"></tbody>
+                    </table>
+                </div>
+                <div class="panel-footer" style="border-top: none; padding-top:10px;">
+                    <span style="color:#747d8c;">显示距离最近的 8 例，绿色背景 = 阴性，红色背景 = 阳性</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== 面板 3：反事实模拟 ========== -->
+        <div class="xai-panel" id="panel3">
+            <div class="cf-controls">
+                <div class="cf-group">
+                    <label>总胆固醇干预模拟</label>
+                    <div class="cf-meta">
+                        <span>当前: <span id="cf-chol-base">280</span> mg/dL</span>
+                        <span>目标: <span class="target" id="cf-chol-target">280</span> mg/dL</span>
+                    </div>
+                    <input type="range" class="cf-range" id="slider-cf-chol" min="150" max="400" value="280" step="2">
+                </div>
+                <div class="cf-group">
+                    <label>最大心率恢复模拟</label>
+                    <div class="cf-meta">
+                        <span>当前: <span id="cf-heart-base">120</span> bpm</span>
+                        <span>目标: <span class="target" id="cf-heart-target">120</span> bpm</span>
+                    </div>
+                    <input type="range" class="cf-range" id="slider-cf-heart" min="70" max="200" value="120" step="1">
+                </div>
+            </div>
+            <div class="panel-chart-wrapper">
+                <div class="chart-box" id="chart-counterfactual"></div>
+                <div class="panel-footer">
+                    <span class="legend-item"><span class="legend-color" style="background:#10ac84;"></span> 风险随干预的下降轨迹</span>
+                    <span style="margin-left:auto; color:#747d8c;">纵轴为预测风险 (%)，横轴为干预阶段</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== 面板 4：ROC 曲线 ========== -->
+        <div class="xai-panel" id="panel4">
+            <div class="panel-chart-wrapper">
+                <div class="chart-box" id="chart-roc"></div>
+                <div class="panel-footer">
+                    <span class="legend-item"><span class="legend-color" style="background:#ff3355;"></span> 模型 ROC (AUC = <span id="auc-value">0.91</span>)</span>
+                    <span class="legend-item"><span class="legend-color" style="background:#747d8c;"></span> 随机猜测参考线</span>
+                    <span style="margin-left:auto; color:#747d8c;">AUC 越接近 1，模型区分力越强</span>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /panels -->
+</div>
+
+<script>
+(function() {
+    // ================================================================
+    // 0. 中文特征名映射
+    // ================================================================
+    var FEATURE_CN = {
+        'age': '年龄',
+        'sex': '性别',
+        'cp': '胸痛类型',
+        'trestbps': '静息血压',
+        'chol': '胆固醇',
+        'fbs': '空腹血糖',
+        'restecg': '静息心电',
+        'thalach': '最大心率',
+        'exang': '运动心绞痛',
+        'oldpeak': 'ST段压低',
+        'slope': 'ST段斜率',
+        'ca': '血管阻塞数',
+        'thal': '血流分型'
+    };
+
+    // ================================================================
+    // 1. 完整数据集 (303条) 与统计量
+    // ================================================================
+    var RAW = [
+        [63,1,1,145,233,1,2,150,0,2.3,3,0,6,0],
+        [67,1,4,160,286,0,2,108,1,1.5,2,3,3,1],
+        [67,1,4,120,229,0,2,129,1,2.6,2,2,7,1],
+        [37,1,3,130,250,0,0,187,0,3.5,3,0,3,0],
+        [41,0,2,130,204,0,2,172,0,1.4,1,0,3,0],
+        [56,1,2,120,236,0,0,178,0,0.8,1,0,3,0],
+        [62,0,4,140,268,0,2,160,0,3.6,3,2,3,1],
+        [57,0,4,120,354,0,0,163,1,0.6,1,0,3,0],
+        [63,1,4,130,254,0,2,147,0,1.4,2,1,7,1],
+        [53,1,4,140,203,1,2,155,1,3.1,3,0,7,1],
+        [57,1,4,140,192,0,0,148,0,0.4,2,0,6,0],
+        [56,0,2,140,294,0,2,153,0,1.3,2,0,3,0],
+        [56,1,3,130,256,1,2,142,1,0.6,2,1,6,1],
+        [44,1,2,120,263,0,0,173,0,0,1,0,7,0],
+        [52,1,3,172,199,1,0,162,0,0.5,1,0,7,0],
+        [57,1,3,150,168,0,0,174,0,1.6,1,0,3,0],
+        [48,1,2,110,229,0,0,168,0,1,3,0,7,1],
+        [54,1,4,140,239,0,0,160,0,1.2,1,0,3,0],
+        [48,0,3,130,275,0,0,139,0,0.2,1,0,3,0],
+        [49,1,2,130,266,0,0,171,0,0.6,1,0,3,0],
+        [64,1,1,110,211,0,2,144,1,1.8,2,0,3,0],
+        [58,0,1,150,283,1,2,162,0,1,1,0,3,0],
+        [58,1,2,120,284,0,2,160,0,1.8,2,0,3,1],
+        [58,1,3,132,224,0,2,173,0,3.2,1,2,7,1],
+        [60,1,4,130,206,0,2,132,1,2.4,2,2,7,1],
+        [50,0,3,120,219,0,0,158,0,1.6,2,0,3,0],
+        [58,0,3,120,340,0,0,172,0,0,1,0,3,0],
+        [66,0,1,150,226,0,0,114,0,2.6,3,0,3,0],
+        [43,1,4,150,247,0,0,171,0,1.5,1,0,3,0],
+        [40,1,4,110,167,0,2,114,1,2,2,0,7,1],
+        [69,0,1,140,239,0,0,151,0,1.8,1,2,3,0],
+        [60,1,4,117,230,1,0,160,1,1.4,1,2,7,1],
+        [64,1,3,140,335,0,0,158,0,0,1,0,3,1],
+        [59,1,4,135,234,0,0,161,0,0.5,2,0,7,0],
+        [44,1,3,130,233,0,0,179,1,0.4,1,0,3,0],
+        [42,1,4,140,226,0,0,178,0,0,1,0,3,0],
+        [43,1,4,120,177,0,2,120,1,2.5,2,0,7,1],
+        [57,1,4,150,276,0,2,112,1,0.6,2,1,6,1],
+        [55,1,4,132,353,0,0,132,1,1.2,2,1,7,1],
+        [61,1,3,150,243,1,0,137,1,1,2,0,3,0],
+        [65,0,4,150,225,0,2,114,0,1,2,3,7,1],
+        [40,1,1,140,199,0,0,178,1,1.4,1,0,7,0],
+        [71,0,2,160,302,0,0,162,0,0.4,1,2,3,0],
+        [59,1,3,150,212,1,0,157,0,1.6,1,0,3,0],
+        [61,0,4,130,330,0,2,169,0,0,1,0,3,1],
+        [58,1,3,112,230,0,2,165,0,2.5,2,1,7,1],
+        [51,1,3,110,175,0,0,123,0,0.6,1,0,3,0],
+        [50,1,4,150,243,0,2,128,0,2.6,2,0,7,1],
+        [65,0,3,140,417,1,2,157,0,0.8,1,1,3,0],
+        [53,1,3,130,197,1,2,152,0,1.2,3,0,3,0],
+        [41,0,2,105,198,0,0,168,0,0,1,1,3,0],
+        [65,1,4,120,177,0,0,140,0,0.4,1,0,7,0],
+        [44,1,4,112,290,0,2,153,0,0,1,1,3,1],
+        [44,1,2,130,219,0,2,188,0,0,1,0,3,0],
+        [60,1,4,130,253,0,0,144,1,1.4,1,1,7,1],
+        [54,1,4,124,266,0,2,109,1,2.2,2,1,7,1],
+        [50,1,3,140,233,0,0,163,0,0.6,2,1,7,1],
+        [41,1,4,110,172,0,2,158,0,0,1,0,7,1],
+        [54,1,3,125,273,0,2,152,0,0.5,3,1,3,0],
+        [51,1,1,125,213,0,2,125,1,1.4,1,1,3,0],
+        [51,0,4,130,305,0,0,142,1,1.2,2,0,7,1],
+        [46,0,3,142,177,0,2,160,1,1.4,3,0,3,0],
+        [58,1,4,128,216,0,2,131,1,2.2,2,3,7,1],
+        [54,0,3,135,304,1,0,170,0,0,1,0,3,0],
+        [54,1,4,120,188,0,0,113,0,1.4,2,1,7,1],
+        [60,1,4,145,282,0,2,142,1,2.8,2,2,7,1],
+        [60,1,3,140,185,0,2,155,0,3,2,0,3,1],
+        [54,1,3,150,232,0,2,165,0,1.6,1,0,7,0],
+        [59,1,4,170,326,0,2,140,1,3.4,3,0,7,1],
+        [46,1,3,150,231,0,0,147,0,3.6,2,0,3,1],
+        [65,0,3,155,269,0,0,148,0,0.8,1,0,3,0],
+        [67,1,4,125,254,1,0,163,0,0.2,2,2,7,1],
+        [62,1,4,120,267,0,0,99,1,1.8,2,2,7,1],
+        [65,1,4,110,248,0,2,158,0,0.6,1,2,6,1],
+        [44,1,4,110,197,0,2,177,0,0,1,1,3,1],
+        [65,0,3,160,360,0,2,151,0,0.8,1,0,3,0],
+        [60,1,4,125,258,0,2,141,1,2.8,2,1,7,1],
+        [51,0,3,140,308,0,2,142,0,1.5,1,1,3,0],
+        [48,1,2,130,245,0,2,180,0,0.2,2,0,3,0],
+        [58,1,4,150,270,0,2,111,1,0.8,1,0,7,1],
+        [45,1,4,104,208,0,2,148,1,3,2,0,3,0],
+        [53,0,4,130,264,0,2,143,0,0.4,2,0,3,0],
+        [39,1,3,140,321,0,2,182,0,0,1,0,3,0],
+        [68,1,3,180,274,1,2,150,1,1.6,2,0,7,1],
+        [52,1,2,120,325,0,0,172,0,0.2,1,0,3,0],
+        [44,1,3,140,235,0,2,180,0,0,1,0,3,0],
+        [47,1,3,138,257,0,2,156,0,0,1,0,3,0],
+        [53,0,3,128,216,0,2,115,0,0,1,0,3,0],
+        [53,0,4,138,234,0,2,160,0,0,1,0,3,0],
+        [51,0,3,130,256,0,2,149,0,0.5,1,0,3,0],
+        [66,1,4,120,302,0,2,151,0,0.4,2,0,3,0],
+        [62,0,4,160,164,0,2,145,0,6.2,3,3,7,1],
+        [62,1,3,130,231,0,0,146,0,1.8,2,3,7,0],
+        [44,0,3,108,141,0,0,175,0,0.6,2,0,3,0],
+        [63,0,3,135,252,0,2,172,0,0,1,0,3,0],
+        [52,1,4,128,255,0,0,161,1,0,1,1,7,1],
+        [59,1,4,110,239,0,2,142,1,1.2,2,1,7,1],
+        [60,0,4,150,258,0,2,157,0,2.6,2,2,7,1],
+        [52,1,2,134,201,0,0,158,0,0.8,1,1,3,0],
+        [48,1,4,122,222,0,2,186,0,0,1,0,3,0],
+        [45,1,4,115,260,0,2,185,0,0,1,0,3,0],
+        [34,1,1,118,182,0,2,174,0,0,1,0,3,0],
+        [57,0,4,128,303,0,2,159,0,0,1,1,3,0],
+        [71,0,3,110,265,1,2,130,0,0,1,1,3,0],
+        [49,1,3,120,188,0,0,139,0,2,2,3,7,1],
+        [54,1,2,108,309,0,0,156,0,0,1,0,7,0],
+        [59,1,4,140,177,0,0,162,1,0,1,1,7,1],
+        [57,1,3,128,229,0,2,150,0,0.4,2,1,7,1],
+        [61,1,4,120,260,0,0,140,1,3.6,2,1,7,1],
+        [39,1,4,118,219,0,0,140,0,1.2,2,0,7,1],
+        [61,0,4,145,307,0,2,146,1,1,2,0,7,1],
+        [56,1,4,125,249,1,2,144,1,1.2,2,1,3,1],
+        [52,1,1,118,186,0,2,190,0,0,2,0,6,0],
+        [43,0,4,132,341,1,2,136,1,3,2,0,7,1],
+        [62,0,3,130,263,0,0,97,0,1.2,2,1,7,1],
+        [41,1,2,135,203,0,0,132,0,0,2,0,6,0],
+        [58,1,3,140,211,1,2,165,0,0,1,0,3,0],
+        [35,0,4,138,183,0,0,182,0,1.4,1,0,3,0],
+        [63,1,4,130,330,1,2,132,1,1.8,1,3,7,1],
+        [65,1,4,135,254,0,2,127,0,2.8,2,1,7,1],
+        [48,1,4,130,256,1,2,150,1,0,1,2,7,1],
+        [63,0,4,150,407,0,2,154,0,4,2,3,7,1],
+        [51,1,3,100,222,0,0,143,1,1.2,2,0,3,0],
+        [55,1,4,140,217,0,0,111,1,5.6,3,0,7,1],
+        [65,1,1,138,282,1,2,174,0,1.4,2,1,3,1],
+        [45,0,2,130,234,0,2,175,0,0.6,2,0,3,0],
+        [56,0,4,200,288,1,2,133,1,4,3,2,7,1],
+        [54,1,4,110,239,0,0,126,1,2.8,2,1,7,1],
+        [44,1,2,120,220,0,0,170,0,0,1,0,3,0],
+        [62,0,4,124,209,0,0,163,0,0,1,0,3,0],
+        [54,1,3,120,258,0,2,147,0,0.4,2,0,7,0],
+        [51,1,3,94,227,0,0,154,1,0,1,1,7,0],
+        [29,1,2,130,204,0,2,202,0,0,1,0,3,0],
+        [51,1,4,140,261,0,2,186,1,0,1,0,3,0],
+        [43,0,3,122,213,0,0,165,0,0.2,2,0,3,0],
+        [55,0,2,135,250,0,2,161,0,1.4,2,0,3,0],
+        [70,1,4,145,174,0,0,125,1,2.6,3,0,7,1],
+        [62,1,2,120,281,0,2,103,0,1.4,2,1,7,1],
+        [35,1,4,120,198,0,0,130,1,1.6,2,0,7,1],
+        [51,1,3,125,245,1,2,166,0,2.4,2,0,3,0],
+        [59,1,2,140,221,0,0,164,1,0,1,0,3,0],
+        [59,1,1,170,288,0,2,159,0,0.2,2,0,7,1],
+        [52,1,2,128,205,1,0,184,0,0,1,0,3,0],
+        [64,1,3,125,309,0,0,131,1,1.8,2,0,7,1],
+        [58,1,3,105,240,0,2,154,1,0.6,2,0,7,0],
+        [47,1,3,108,243,0,0,152,0,0,1,0,3,1],
+        [57,1,4,165,289,1,2,124,0,1,2,3,7,1],
+        [41,1,3,112,250,0,0,179,0,0,1,0,3,0],
+        [45,1,2,128,308,0,2,170,0,0,1,0,3,0],
+        [60,0,3,102,318,0,0,160,0,0,1,1,3,0],
+        [52,1,1,152,298,1,0,178,0,1.2,2,0,7,0],
+        [42,0,4,102,265,0,2,122,0,0.6,2,0,3,0],
+        [67,0,3,115,564,0,2,160,0,1.6,2,0,7,0],
+        [55,1,4,160,289,0,2,145,1,0.8,2,1,7,1],
+        [64,1,4,120,246,0,2,96,1,2.2,3,1,3,1],
+        [70,1,4,130,322,0,2,109,0,2.4,2,3,3,1],
+        [51,1,4,140,299,0,0,173,1,1.6,1,0,7,1],
+        [58,1,4,125,300,0,2,171,0,0,1,2,7,1],
+        [60,1,4,140,293,0,2,170,0,1.2,2,2,7,1],
+        [68,1,3,118,277,0,0,151,0,1,1,1,7,0],
+        [46,1,2,101,197,1,0,156,0,0,1,0,7,0],
+        [77,1,4,125,304,0,2,162,1,0,1,3,3,1],
+        [54,0,3,110,214,0,0,158,0,1.6,2,0,3,0],
+        [58,0,4,100,248,0,2,122,0,1,2,0,3,0],
+        [48,1,3,124,255,1,0,175,0,0,1,2,3,0],
+        [57,1,4,132,207,0,0,168,1,0,1,0,7,0],
+        [52,1,3,138,223,0,0,169,0,0,1,0,3,0],
+        [54,0,2,132,288,1,2,159,1,0,1,1,3,0],
+        [35,1,4,126,282,0,2,156,1,0,1,0,7,1],
+        [45,0,2,112,160,0,0,138,0,0,2,0,3,0],
+        [70,1,3,160,269,0,0,112,1,2.9,2,1,7,1],
+        [53,1,4,142,226,0,2,111,1,0,1,0,7,0],
+        [59,0,4,174,249,0,0,143,1,0,2,0,3,1],
+        [62,0,4,140,394,0,2,157,0,1.2,2,0,3,0],
+        [64,1,4,145,212,0,2,132,0,2,2,2,6,1],
+        [57,1,4,152,274,0,0,88,1,1.2,2,1,7,1],
+        [52,1,4,108,233,1,0,147,0,0.1,1,3,7,0],
+        [56,1,4,132,184,0,2,105,1,2.1,2,1,6,1],
+        [43,1,3,130,315,0,0,162,0,1.9,1,1,3,0],
+        [53,1,3,130,246,1,2,173,0,0,1,3,3,0],
+        [48,1,4,124,274,0,2,166,0,0.5,2,0,7,1],
+        [56,0,4,134,409,0,2,150,1,1.9,2,2,7,1],
+        [42,1,1,148,244,0,2,178,0,0.8,1,2,3,0],
+        [59,1,1,178,270,0,2,145,0,4.2,3,0,7,0],
+        [60,0,4,158,305,0,2,161,0,0,1,0,3,1],
+        [63,0,2,140,195,0,0,179,0,0,1,2,3,0],
+        [42,1,3,120,240,1,0,194,0,0.8,3,0,7,0],
+        [66,1,2,160,246,0,0,120,1,0,2,3,6,1],
+        [54,1,2,192,283,0,2,195,0,0,1,1,7,1],
+        [69,1,3,140,254,0,2,146,0,2,2,3,7,1],
+        [50,1,3,129,196,0,0,163,0,0,1,0,3,0],
+        [51,1,4,140,298,0,0,122,1,4.2,2,3,7,1],
+        [43,1,4,132,247,1,2,143,1,0.1,2,0,7,1],
+        [62,0,4,138,294,1,0,106,0,1.9,2,3,3,1],
+        [68,0,3,120,211,0,2,115,0,1.5,2,0,3,0],
+        [67,1,4,100,299,0,2,125,1,0.9,2,2,3,1],
+        [69,1,1,160,234,1,2,131,0,0.1,2,1,3,0],
+        [45,0,4,138,236,0,2,152,1,0.2,2,0,3,0],
+        [50,0,2,120,244,0,0,162,0,1.1,1,0,3,0],
+        [59,1,1,160,273,0,2,125,0,0,1,0,3,1],
+        [50,0,4,110,254,0,2,159,0,0,1,0,3,0],
+        [64,0,4,180,325,0,0,154,1,0,1,0,3,0],
+        [57,1,3,150,126,1,0,173,0,0.2,1,1,7,0],
+        [64,0,3,140,313,0,0,133,0,0.2,1,0,7,0],
+        [43,1,4,110,211,0,0,161,0,0,1,0,7,0],
+        [45,1,4,142,309,0,2,147,1,0,2,3,7,1],
+        [58,1,4,128,259,0,2,130,1,3,2,2,7,1],
+        [50,1,4,144,200,0,2,126,1,0.9,2,0,7,1],
+        [55,1,2,130,262,0,0,155,0,0,1,0,3,0],
+        [62,0,4,150,244,0,0,154,1,1.4,2,0,3,1],
+        [37,0,3,120,215,0,0,170,0,0,1,0,3,0],
+        [38,1,1,120,231,0,0,182,1,3.8,2,0,7,1],
+        [41,1,3,130,214,0,2,168,0,2,2,0,3,0],
+        [66,0,4,178,228,1,0,165,1,1,2,2,7,1],
+        [52,1,4,112,230,0,0,160,0,0,1,1,3,1],
+        [56,1,1,120,193,0,2,162,0,1.9,2,0,7,0],
+        [46,0,2,105,204,0,0,172,0,0,1,0,3,0],
+        [46,0,4,138,243,0,2,152,1,0,2,0,3,0],
+        [64,0,4,130,303,0,0,122,0,2,2,2,3,0],
+        [59,1,4,138,271,0,2,182,0,0,1,0,3,0],
+        [41,0,3,112,268,0,2,172,1,0,1,0,3,0],
+        [54,0,3,108,267,0,2,167,0,0,1,0,3,0],
+        [39,0,3,94,199,0,0,179,0,0,1,0,3,0],
+        [53,1,4,123,282,0,0,95,1,2,2,2,7,1],
+        [63,0,4,108,269,0,0,169,1,1.8,2,2,3,1],
+        [34,0,2,118,210,0,0,192,0,0.7,1,0,3,0],
+        [47,1,4,112,204,0,0,143,0,0.1,1,0,3,0],
+        [67,0,3,152,277,0,0,172,0,0,1,1,3,0],
+        [54,1,4,110,206,0,2,108,1,0,2,1,3,1],
+        [66,1,4,112,212,0,2,132,1,0.1,1,1,3,1],
+        [52,0,3,136,196,0,2,169,0,0.1,2,0,3,0],
+        [55,0,4,180,327,0,1,117,1,3.4,2,0,3,1],
+        [49,1,3,118,149,0,2,126,0,0.8,1,3,3,1],
+        [74,0,2,120,269,0,2,121,1,0.2,1,1,3,0],
+        [54,0,3,160,201,0,0,163,0,0,1,1,3,0],
+        [54,1,4,122,286,0,2,116,1,3.2,2,2,3,1],
+        [56,1,4,130,283,1,2,103,1,1.6,3,0,7,1],
+        [46,1,4,120,249,0,2,144,0,0.8,1,0,7,1],
+        [49,0,2,134,271,0,0,162,0,0,2,0,3,0],
+        [42,1,2,120,295,0,0,162,0,0,1,0,3,0],
+        [41,1,2,110,235,0,0,153,0,0,1,0,3,0],
+        [41,0,2,126,306,0,0,163,0,0,1,0,3,0],
+        [49,0,4,130,269,0,0,163,0,0,1,0,3,0],
+        [61,1,1,134,234,0,0,145,0,2.6,2,2,3,1],
+        [60,0,3,120,178,1,0,96,0,0,1,0,3,0],
+        [67,1,4,120,237,0,0,71,0,1,2,0,3,1],
+        [58,1,4,100,234,0,0,156,0,0.1,1,1,7,1],
+        [47,1,4,110,275,0,2,118,1,1,2,1,3,1],
+        [52,1,4,125,212,0,0,168,0,1,1,2,7,1],
+        [62,1,2,128,208,1,2,140,0,0,1,0,3,0],
+        [57,1,4,110,201,0,0,126,1,1.5,2,0,6,0],
+        [58,1,4,146,218,0,0,105,0,2,2,1,7,1],
+        [64,1,4,128,263,0,0,105,1,0.2,2,1,7,0],
+        [51,0,3,120,295,0,2,157,0,0.6,1,0,3,0],
+        [43,1,4,115,303,0,0,181,0,1.2,2,0,3,0],
+        [42,0,3,120,209,0,0,173,0,0,2,0,3,0],
+        [67,0,4,106,223,0,0,142,0,0.3,1,2,3,0],
+        [76,0,3,140,197,0,1,116,0,1.1,2,0,3,0],
+        [70,1,2,156,245,0,2,143,0,0,1,0,3,0],
+        [57,1,2,124,261,0,0,141,0,0.3,1,0,7,1],
+        [44,0,3,118,242,0,0,149,0,0.3,2,1,3,0],
+        [58,0,2,136,319,1,2,152,0,0,1,2,3,1],
+        [60,0,1,150,240,0,0,171,0,0.9,1,0,3,0],
+        [44,1,3,120,226,0,0,169,0,0,1,0,3,0],
+        [61,1,4,138,166,0,2,125,1,3.6,2,1,3,1],
+        [42,1,4,136,315,0,0,125,1,1.8,2,0,6,1],
+        [52,1,4,128,204,1,0,156,1,1,2,0,3,1],
+        [59,1,3,126,218,1,0,134,0,2.2,2,1,6,1],
+        [40,1,4,152,223,0,0,181,0,0,1,0,7,1],
+        [42,1,3,130,180,0,0,150,0,0,1,0,3,0],
+        [61,1,4,140,207,0,2,138,1,1.9,1,1,7,1],
+        [66,1,4,160,228,0,2,138,0,2.3,1,0,6,0],
+        [46,1,4,140,311,0,0,120,1,1.8,2,2,7,1],
+        [71,0,4,112,149,0,0,125,0,1.6,2,0,3,0],
+        [59,1,1,134,204,0,0,162,0,0.8,1,2,3,1],
+        [64,1,1,170,227,0,2,155,0,0.6,2,0,7,0],
+        [66,0,3,146,278,0,2,152,0,0,2,1,3,0],
+        [39,0,3,138,220,0,0,152,0,0,2,0,3,0],
+        [57,1,2,154,232,0,2,164,0,0,1,1,3,1],
+        [58,0,4,130,197,0,0,131,0,0.6,2,0,3,0],
+        [57,1,4,110,335,0,0,143,1,3,2,1,7,1],
+        [47,1,3,130,253,0,0,179,0,0,1,0,3,0],
+        [55,0,4,128,205,0,1,130,1,2,2,1,7,1],
+        [35,1,2,122,192,0,0,174,0,0,1,0,3,0],
+        [61,1,4,148,203,0,0,161,0,0,1,1,7,1],
+        [58,1,4,114,318,0,1,140,0,4.4,3,3,6,1],
+        [58,0,4,170,225,1,2,146,1,2.8,2,2,6,1],
+        [58,1,2,125,220,0,0,144,0,0.4,2,0,7,0],
+        [56,1,2,130,221,0,2,163,0,0,1,0,7,0],
+        [56,1,2,120,240,0,0,169,0,0,3,0,3,0],
+        [67,1,3,152,212,0,2,150,0,0.8,2,0,7,1],
+        [55,0,2,132,342,0,0,166,0,1.2,1,0,3,0],
+        [44,1,4,120,169,0,0,144,1,2.8,3,0,6,1],
+        [63,1,4,140,187,0,2,144,1,4,1,2,7,1],
+        [63,0,4,124,197,0,0,136,1,0,2,0,3,1],
+        [41,1,2,120,157,0,0,182,0,0,1,0,3,0],
+        [59,1,4,164,176,1,2,90,0,1,2,2,6,1],
+        [57,0,4,140,241,0,0,123,1,0.2,2,0,7,1],
+        [45,1,1,110,264,0,0,132,0,1.2,2,0,7,1],
+        [68,1,4,144,193,1,0,141,0,3.4,2,2,7,1],
+        [57,1,4,130,131,0,0,115,1,1.2,2,1,7,1],
+        [57,0,2,130,236,0,2,174,0,0,2,1,3,1],
+        [38,1,3,138,175,0,0,173,0,0,1,0,3,0]
+    ];
+
+    var FEATURES = ['age','sex','cp','trestbps','chol','fbs','restecg','thalach','exang','oldpeak','slope','ca','thal'];
+    var data = RAW.map(function(r) {
+        var obj = {};
+        FEATURES.forEach(function(f,i) { obj[f] = r[i]; });
+        obj.target = r[13];
+        return obj;
+    });
+
+    // 全局统计（用于标准化和模型参数）
+    var GLOBAL_MEAN = [54.55, 0.68, 3.15, 130.96, 249.84, 0.14, 0.98, 149.96, 0.33, 1.00, 1.59, 0.61, 4.71];
+    var GLOBAL_SCALE = [8.98, 0.47, 0.97, 17.59, 52.74, 0.35, 0.99, 22.64, 0.47, 1.12, 0.61, 0.88, 1.94];
+    var COEFF = [-0.1034, 0.6561, 0.5432, 0.3137, 0.2155, -0.2206, 0.2173, -0.3482, 0.3837, 0.1492, 0.3543, 1.1081, 0.6783];
+    var INTERCEPT = -0.0811;
+
+    // 计算健康/患病均值用于基线
+    var healthy = data.filter(function(d) { return d.target === 0; });
+    var patient = data.filter(function(d) { return d.target === 1; });
+    function meanArr(arr, key) {
+        var sum = 0;
+        for (var i = 0; i < arr.length; i++) {
+            sum += arr[i][key];
+        }
+        return sum / arr.length;
+    }
+    var healthyMean = {};
+    var patientMean = {};
+    FEATURES.forEach(function(f) {
+        healthyMean[f] = meanArr(healthy, f);
+        patientMean[f] = meanArr(patient, f);
+    });
+
+    // 风险计算函数
+    function calcRisk(inputs) {
+        var logit = INTERCEPT;
+        for (var i = 0; i < 13; i++) {
+            var val = inputs[FEATURES[i]];
+            var norm = (val - GLOBAL_MEAN[i]) / GLOBAL_SCALE[i];
+            logit += COEFF[i] * norm;
+        }
+        return 1 / (1 + Math.exp(-logit)) * 100;
+    }
+
+    // 获取 Section 1 输入
+    function getInputs() {
+        var getVal = function(id, fallback) {
+            var el = document.getElementById(id);
+            if (el) {
+                var v = parseFloat(el.value);
+                return isNaN(v) ? fallback : v;
+            }
+            return fallback;
+        };
+        return {
+            age: getVal('input-age', 56),
+            sex: getVal('input-sex', 1),
+            cp: getVal('input-cp', 4),
+            trestbps: getVal('input-trestbps', 130),
+            chol: getVal('input-chol', 240),
+            fbs: getVal('input-fbs', 0),
+            restecg: getVal('input-restecg', 1),
+            thalach: getVal('input-thalach', 150),
+            exang: getVal('input-exang', 0),
+            oldpeak: getVal('input-oldpeak', 1.0),
+            slope: getVal('input-slope', 1),
+            ca: getVal('input-ca', 0),
+            thal: getVal('input-thal', 3)
+        };
+    }
+
+    // 计算标准化值
+    function getNormalized(inputs) {
+        var result = [];
+        for (var i = 0; i < FEATURES.length; i++) {
+            result.push((inputs[FEATURES[i]] - GLOBAL_MEAN[i]) / GLOBAL_SCALE[i]);
+        }
+        return result;
+    }
+
+    // ================================================================
+    // 图表实例
+    // ================================================================
+    var shapChart = null, forceChart = null, cfChart = null, rocChart = null;
+    var PRIMARY = '#0f1115';
+    var RED = '#ff3355';
+    var GREEN = '#10ac84';
+    var GREY = '#747d8c';
+
+    // ================================================================
+    // 1. SHAP 归因瀑布图（全中文）
+    // ================================================================
+    function renderShap(inputs) {
+        var dom = document.getElementById('chart-shap');
+        if (!dom) return;
+        if (!shapChart) shapChart = echarts.init(dom);
+        shapChart.resize();
+
+        var norm = getNormalized(inputs);
+        var contrib = FEATURES.map(function(f, i) {
+            return {
+                name: f,
+                val: COEFF[i] * norm[i]
+            };
+        });
+        // 按绝对值排序
+        contrib.sort(function(a, b) {
+            return Math.abs(b.val) - Math.abs(a.val);
+        });
+
+        var baseLogit = INTERCEPT;
+        var baseProb = 1 / (1 + Math.exp(-baseLogit)) * 100;
+        var cum = baseLogit;
+        contrib.forEach(function(c) {
+            cum += c.val;
+        });
+        var finalProb = 1 / (1 + Math.exp(-cum)) * 100;
+
+        // 构建中文名称列表
+        var names = ['基线先验'];
+        contrib.forEach(function(c) {
+            names.push(FEATURE_CN[c.name] || c.name);
+        });
+        names.push('最终概率');
+
+        var chartData = names.map(function(name, idx) {
+            var val = 0;
+            if (idx === 0) val = baseProb;
+            else if (idx === names.length - 1) val = finalProb;
+            else {
+                var c = contrib[idx - 1];
+                val = c.val;
+            }
+            var isBase = (idx === 0 || idx === names.length - 1);
+            var color = isBase ? PRIMARY : (val > 0 ? RED : GREEN);
+            return {
+                name: name,
+                value: val,
+                itemStyle: { color: color }
+            };
+        });
+
+        // 构建 tooltip 用的映射
+        var contribMap = {};
+        contrib.forEach(function(c) {
+            contribMap[FEATURE_CN[c.name] || c.name] = c.val;
+        });
+
+        shapChart.setOption({
+            backgroundColor: 'transparent',
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: { type: 'shadow' },
+                formatter: function(params) {
+                    var p = params[0];
+                    var idx = p.dataIndex;
+                    if (idx === 0) return '基线概率: ' + p.value.toFixed(1) + '%';
+                    if (idx === names.length - 1) return '最终概率: ' + p.value.toFixed(1) + '%';
+                    var name = names[idx];
+                    var val = contribMap[name] || 0;
+                    var sign = val > 0 ? '+' : '';
+                    return name + '<br/>边际贡献: ' + sign + val.toFixed(1) + '%';
+                }
+            },
+            grid: { left: '10%', right: '6%', top: '8%', bottom: '12%', containLabel: true },
+            xAxis: {
+                type: 'category',
+                data: names,
+                axisLabel: { rotate: 30, fontSize: 10, fontWeight: 700, color: PRIMARY },
+                axisLine: { lineStyle: { color: PRIMARY } }
+            },
+            yAxis: {
+                type: 'value',
+                name: '风险概率 (%)',
+                min: 0,
+                max: 100,
+                axisLabel: { formatter: '{value}%', color: PRIMARY, fontWeight: 700 },
+                splitLine: { lineStyle: { color: 'rgba(0,0,0,0.05)' } }
+            },
+            series: [{
+                type: 'bar',
+                data: chartData,
+                barWidth: 30,
+                label: {
+                    show: true,
+                    position: 'top',
+                    formatter: function(p) {
+                        if (p.dataIndex === 0 || p.dataIndex === names.length - 1) {
+                            return p.value.toFixed(1) + '%';
+                        }
+                        return (p.value > 0 ? '+' : '') + p.value.toFixed(1);
+                    },
+                    color: PRIMARY,
+                    fontWeight: 700,
+                    fontSize: 10
+                }
+            }]
+        });
+    }
+
+    // ================================================================
+    // 2. 风险平衡力 (双向条形图，全中文)
+    // ================================================================
+    function renderForce(inputs) {
+        var dom = document.getElementById('chart-force');
+        if (!dom) return;
+        if (!forceChart) forceChart = echarts.init(dom);
+        forceChart.resize();
+
+        var norm = getNormalized(inputs);
+        var contrib = FEATURES.map(function(f, i) {
+            return {
+                name: f,
+                val: COEFF[i] * norm[i]
+            };
+        });
+        var pos = contrib.filter(function(c) { return c.val > 0; }).sort(function(a, b) {
+            return b.val - a.val;
+        });
+        var neg = contrib.filter(function(c) { return c.val < 0; }).sort(function(a, b) {
+            return a.val - b.val;
+        });
+
+        var posNames = pos.map(function(c) { return FEATURE_CN[c.name] || c.name; });
+        var posVals = pos.map(function(c) { return c.val; });
+        var negNames = neg.map(function(c) { return FEATURE_CN[c.name] || c.name; });
+        var negVals = neg.map(function(c) { return Math.abs(c.val); });
+
+        var yData = posNames.concat(negNames);
+        var seriesData = posVals.map(function(v) {
+            return { value: v, itemStyle: { color: RED } };
+        }).concat(negVals.map(function(v) {
+            return { value: -v, itemStyle: { color: GREEN } };
+        }));
+
+        forceChart.setOption({
+            backgroundColor: 'transparent',
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: { type: 'shadow' },
+                formatter: function(params) {
+                    var p = params[0];
+                    var val = p.value;
+                    return p.name + '<br/>贡献: ' + (val > 0 ? '+' : '') + val.toFixed(1) + '%';
+                }
+            },
+            grid: { left: '10%', right: '6%', top: '8%', bottom: '8%', containLabel: true },
+            xAxis: {
+                type: 'value',
+                name: '边际贡献 (%)',
+                axisLabel: { color: PRIMARY, fontWeight: 700 },
+                splitLine: { lineStyle: { color: 'rgba(0,0,0,0.05)' } }
+            },
+            yAxis: {
+                type: 'category',
+                data: yData,
+                axisLabel: { color: PRIMARY, fontWeight: 700, fontSize: 11 },
+                axisLine: { show: false },
+                axisTick: { show: false }
+            },
+            series: [{
+                type: 'bar',
+                data: seriesData,
+                barWidth: 12,
+                label: {
+                    show: true,
+                    position: function(p) { return p.value > 0 ? 'right' : 'left'; },
+                    formatter: function(p) {
+                        return (p.value > 0 ? '+' : '') + p.value.toFixed(1) + '%';
+                    },
+                    color: PRIMARY,
+                    fontWeight: 700,
+                    fontSize: 10
+                }
+            }]
+        });
+    }
+
+    // ================================================================
+    // 3. KNN 近邻 (基于真实数据集)
+    // ================================================================
+    function renderKNN(inputs) {
+        var tbody = document.getElementById('knnBody');
+        if (!tbody) return;
+
+        var selected = ['age','trestbps','chol','thalach','oldpeak','ca'];
+        var inputVec = selected.map(function(f) { return inputs[f]; });
+        var scales = selected.map(function(f) {
+            return GLOBAL_SCALE[FEATURES.indexOf(f)];
+        });
+        var dists = data.map(function(d) {
+            var vec = selected.map(function(f) { return d[f]; });
+            var dist = 0;
+            for (var i = 0; i < vec.length; i++) {
+                dist += Math.pow((vec[i] - inputVec[i]) / scales[i], 2);
+            }
+            return { dist: Math.sqrt(dist), record: d };
+        });
+        dists.sort(function(a, b) { return a.dist - b.dist; });
+        var top = dists.slice(0, 8);
+
+        var html = '';
+        top.forEach(function(item, idx) {
+            var d = item.record;
+            var cls = d.target === 1 ? 'pos' : 'neg';
+            var badge = d.target === 1 ? '<span class="badge pos">确诊阳性</span>' : '<span class="badge neg">正常阴性</span>';
+            html += '<tr class="' + cls + '">' +
+                '<td>#CN-' + String(idx + 1).padStart(3, '0') + '</td>' +
+                '<td>' + d.age + '</td>' +
+                '<td>' + d.trestbps + '</td>' +
+                '<td>' + d.chol + '</td>' +
+                '<td>' + d.thalach + '</td>' +
+                '<td>' + d.oldpeak + '</td>' +
+                '<td>' + d.ca + '</td>' +
+                '<td>' + badge + '</td>' +
+                '</tr>';
+        });
+        tbody.innerHTML = html;
+    }
+
+    // ================================================================
+    // 4. 反事实模拟
+    // ================================================================
+    function renderCounterfactual(inputs) {
+        var dom = document.getElementById('chart-counterfactual');
+        if (!dom) return;
+        if (!cfChart) cfChart = echarts.init(dom);
+        cfChart.resize();
+
+        var cholSlider = document.getElementById('slider-cf-chol');
+        var heartSlider = document.getElementById('slider-cf-heart');
+        var targetChol = parseFloat(cholSlider.value);
+        var targetHeart = parseFloat(heartSlider.value);
+        document.getElementById('cf-chol-target').innerText = targetChol;
+        document.getElementById('cf-heart-target').innerText = targetHeart;
+
+        var baseChol = inputs.chol;
+        var baseHeart = inputs.thalach;
+        document.getElementById('cf-chol-base').innerText = Math.round(baseChol);
+        document.getElementById('cf-heart-base').innerText = Math.round(baseHeart);
+
+        var stages = ['未干预', '阶段1', '阶段2', '阶段3', '完全干预'];
+        var riskCurve = [];
+        for (var i = 0; i < 5; i++) {
+            var ratio = i / 4;
+            var simChol = baseChol + (targetChol - baseChol) * ratio;
+            var simHeart = baseHeart + (targetHeart - baseHeart) * ratio;
+            var simInputs = {};
+            for (var key in inputs) {
+                if (inputs.hasOwnProperty(key)) {
+                    simInputs[key] = inputs[key];
+                }
+            }
+            simInputs.chol = simChol;
+            simInputs.thalach = simHeart;
+            riskCurve.push(calcRisk(simInputs));
+        }
+
+        cfChart.setOption({
+            backgroundColor: 'transparent',
+            tooltip: {
+                trigger: 'axis',
+                backgroundColor: PRIMARY,
+                textStyle: { color: '#fff' },
+                formatter: function(params) {
+                    var p = params[0];
+                    return p.axisValue + '<br/>预测风险: <b>' + p.value.toFixed(1) + '%</b>';
+                }
+            },
+            grid: { left: '6%', right: '6%', top: '10%', bottom: '12%', containLabel: true },
+            xAxis: {
+                type: 'category',
+                data: stages,
+                axisLabel: { color: PRIMARY, fontWeight: 700 },
+                axisLine: { lineStyle: { color: PRIMARY } }
+            },
+            yAxis: {
+                type: 'value',
+                min: 0,
+                max: 100,
+                axisLabel: { formatter: '{value}%', color: PRIMARY, fontWeight: 700 },
+                splitLine: { lineStyle: { color: 'rgba(0,0,0,0.05)' } }
+            },
+            series: [{
+                type: 'line',
+                smooth: true,
+                data: riskCurve,
+                symbolSize: 10,
+                lineStyle: { width: 4, color: GREEN },
+                itemStyle: { color: PRIMARY },
+                areaStyle: {
+                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                        { offset: 0, color: 'rgba(16,172,132,0.2)' },
+                        { offset: 1, color: 'transparent' }
+                    ])
+                },
+                markLine: {
+                    data: [{ yAxis: 55 }],
+                    lineStyle: { color: PRIMARY, type: 'dashed' },
+                    label: { formatter: '警戒线 55%', color: PRIMARY, fontSize: 10, fontWeight: 700 }
+                },
+                label: {
+                    show: true,
+                    formatter: function(p) { return p.value.toFixed(1) + '%'; },
+                    color: PRIMARY,
+                    fontWeight: 700,
+                    fontSize: 10
+                }
+            }]
+        });
+    }
+
+    // ================================================================
+    // 5. ROC 曲线 (基于真实数据集计算)
+    // ================================================================
+    function renderROC(inputs) {
+        var dom = document.getElementById('chart-roc');
+        if (!dom) return;
+        if (!rocChart) rocChart = echarts.init(dom);
+        rocChart.resize();
+
+        var preds = data.map(function(d) {
+            var inp = {};
+            FEATURES.forEach(function(f) { inp[f] = d[f]; });
+            return calcRisk(inp) / 100;
+        });
+        var labels = data.map(function(d) { return d.target; });
+
+        var thresholds = [];
+        for (var i = 0; i <= 100; i++) thresholds.push(i / 100);
+        var rocPoints = thresholds.map(function(t) {
+            var tp = 0, fp = 0, fn = 0, tn = 0;
+            for (var j = 0; j < preds.length; j++) {
+                if (preds[j] >= t) {
+                    if (labels[j] === 1) tp++;
+                    else fp++;
+                } else {
+                    if (labels[j] === 1) fn++;
+                    else tn++;
+                }
+            }
+            var tpr = tp / (tp + fn) || 0;
+            var fpr = fp / (fp + tn) || 0;
+            return { fpr: fpr, tpr: tpr };
+        });
+        rocPoints.sort(function(a, b) { return a.fpr - b.fpr; });
+        var rocData = [[0, 0]];
+        for (var k = 0; k < rocPoints.length; k++) {
+            rocData.push([rocPoints[k].fpr, rocPoints[k].tpr]);
+        }
+        rocData.push([1, 1]);
+
+        var auc = 0;
+        for (var m = 1; m < rocData.length; m++) {
+            var dx = rocData[m][0] - rocData[m - 1][0];
+            var dy = (rocData[m][1] + rocData[m - 1][1]) / 2;
+            auc += dx * dy;
+        }
+        document.getElementById('auc-value').innerText = auc.toFixed(3);
+
+        rocChart.setOption({
+            backgroundColor: 'transparent',
+            tooltip: {
+                trigger: 'item',
+                formatter: function(p) {
+                    return '(FPR: ' + p.value[0].toFixed(3) + ', TPR: ' + p.value[1].toFixed(3) + ')';
+                }
+            },
+            grid: { left: '8%', right: '8%', top: '8%', bottom: '12%', containLabel: true },
+            xAxis: {
+                name: '假阳性率 (FPR)',
+                min: 0,
+                max: 1,
+                axisLabel: { color: PRIMARY, fontWeight: 700 },
+                splitLine: { show: false },
+                axisLine: { lineStyle: { color: PRIMARY } }
+            },
+            yAxis: {
+                name: '真阳性率 (TPR)',
+                min: 0,
+                max: 1,
+                axisLabel: { color: PRIMARY, fontWeight: 700 },
+                splitLine: { lineStyle: { color: 'rgba(0,0,0,0.05)' } },
+                axisLine: { lineStyle: { color: PRIMARY } }
+            },
+            series: [
+                {
+                    name: 'ROC 曲线',
+                    type: 'line',
+                    smooth: true,
+                    data: rocData,
+                    lineStyle: { width: 3, color: RED },
+                    symbol: 'none',
+                    areaStyle: { color: 'rgba(255,51,85,0.05)' }
+                },
+                {
+                    name: '随机猜测',
+                    type: 'line',
+                    data: [[0, 0], [1, 1]],
+                    lineStyle: { width: 1.5, type: 'dashed', color: GREY },
+                    symbol: 'none'
+                }
+            ]
+        });
+    }
+
+    // ================================================================
+    // 全局刷新函数
+    // ================================================================
+    var lastInputs = null;
+
+    function refreshAll(force) {
+        if (force === undefined) force = false;
+        var inputs = getInputs();
+        if (!force && lastInputs) {
+            var changed = false;
+            for (var f = 0; f < FEATURES.length; f++) {
+                var key = FEATURES[f];
+                if (inputs[key] !== lastInputs[key]) {
+                    changed = true;
+                    break;
+                }
+            }
+            if (!changed) return;
+        }
+        lastInputs = {};
+        for (var k = 0; k < FEATURES.length; k++) {
+            lastInputs[FEATURES[k]] = inputs[FEATURES[k]];
+        }
+
+        var risk = calcRisk(inputs);
+        document.getElementById('global-risk').innerText = Math.round(risk);
+
+        var activePanel = document.querySelector('.xai-panel.active');
+        if (!activePanel) return;
+        var id = activePanel.id;
+
+        switch (id) {
+            case 'panel0': renderShap(inputs); break;
+            case 'panel1': renderForce(inputs); break;
+            case 'panel2': renderKNN(inputs); break;
+            case 'panel3': renderCounterfactual(inputs); break;
+            case 'panel4': renderROC(inputs); break;
+        }
+    }
+
+    // ================================================================
+    // 事件绑定
+    // ================================================================
+    function init() {
+        var tabs = document.querySelectorAll('.xai-tab');
+        var panels = document.querySelectorAll('.xai-panel');
+
+        tabs.forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                tabs.forEach(function(t) { t.classList.remove('active'); });
+                this.classList.add('active');
+                var target = this.dataset.target;
+                panels.forEach(function(p) { p.classList.remove('active'); });
+                var targetPanel = document.getElementById(target);
+                if (targetPanel) {
+                    targetPanel.classList.add('active');
+                    setTimeout(function() {
+                        var inputs = getInputs();
+                        switch (target) {
+                            case 'panel0': renderShap(inputs); break;
+                            case 'panel1': renderForce(inputs); break;
+                            case 'panel2': renderKNN(inputs); break;
+                            case 'panel3': renderCounterfactual(inputs); break;
+                            case 'panel4': renderROC(inputs); break;
+                        }
+                        var charts = [shapChart, forceChart, cfChart, rocChart];
+                        charts.forEach(function(c) { if (c) c.resize(); });
+                    }, 60);
+                }
+            });
+        });
+
+        ['slider-cf-chol', 'slider-cf-heart'].forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('input', function() {
+                    if (document.getElementById('panel3').classList.contains('active')) {
+                        var inputs = getInputs();
+                        renderCounterfactual(inputs);
+                    }
+                });
+            }
+        });
+
+        window.addEventListener('resize', function() {
+            var charts = [shapChart, forceChart, cfChart, rocChart];
+            charts.forEach(function(c) { if (c) c.resize(); });
+        });
+
+        setInterval(function() { refreshAll(false); }, 350);
+
+        setTimeout(function() {
+            var inputs = getInputs();
+            renderShap(inputs);
+            renderForce(inputs);
+            renderKNN(inputs);
+            renderCounterfactual(inputs);
+            renderROC(inputs);
+            document.getElementById('panel0').classList.add('active');
+            var activeTab = document.querySelector('.xai-tab.active');
+            if (activeTab) activeTab.classList.remove('active');
+            var firstTab = document.querySelector('.xai-tab[data-target="panel0"]');
+            if (firstTab) firstTab.classList.add('active');
+            refreshAll(true);
+        }, 100);
+    }
+
+    if (window.echarts) {
+        init();
+    } else {
+        var timer = setInterval(function() {
+            if (window.echarts) {
+                clearInterval(timer);
+                init();
+            }
+        }, 30);
+    }
+})();
+</script>
+</body>
+</html>
