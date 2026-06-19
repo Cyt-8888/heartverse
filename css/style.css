@@ -5,7 +5,7 @@
 /* 1. 定义字体名称，指向本地文件夹 */
 @font-face {
     font-family: 'NotoSansSC';
-    src: url('../fonts/noto-sans-sc-v36-latin_chinese-simplified-regular.woff2') format('woff2');
+    src: url('../fonts/noto-sans-sc-v40-chinese-simplified-regular.woff2') format('woff2');
     font-weight: 400; /* 常规 */
     font-style: normal;
     font-display: swap; /* 关键属性：字体未加载完前先显示系统字体，加载完后无缝替换，不阻塞页面渲染 */
@@ -13,7 +13,7 @@
 
 @font-face {
     font-family: 'NotoSansSC';
-    src: url('../fonts/noto-sans-sc-v36-latin_chinese-simplified-700.woff2') format('woff2');
+    src: url('../fonts/noto-sans-sc-v40-chinese-simplified-700.woff2') format('woff2');
     font-weight: 700; /* 加粗 */
     font-style: normal;
     font-display: swap;
@@ -145,7 +145,7 @@ background: linear-gradient(
 
 .nav-links li a {
     text-decoration: none;
-    color: var(--text-muted);
+    color: rgb(17, 20, 26);
     font-size: 0.95rem;
     transition: color 0.3s ease;
     position: relative;
@@ -153,7 +153,7 @@ background: linear-gradient(
 
 .nav-links li a:hover,
 .nav-links li a.active {
-    color: var(--text-main);
+    color:rgb(255, 51, 85);
     font-weight: 600;
 }
 
