@@ -1,3 +1,36 @@
+/* ===========================================
+   🌐 离线跨平台统一字体（自托管思源黑体）
+   =========================================== */
+
+/* 1. 定义字体名称，指向本地文件夹 */
+@font-face {
+    font-family: 'NotoSansSC';
+    src: url('../fonts/noto-sans-sc-v36-latin_chinese-simplified-regular.woff2') format('woff2');
+    font-weight: 400; /* 常规 */
+    font-style: normal;
+    font-display: swap; /* 关键属性：字体未加载完前先显示系统字体，加载完后无缝替换，不阻塞页面渲染 */
+}
+
+@font-face {
+    font-family: 'NotoSansSC';
+    src: url('../fonts/noto-sans-sc-v36-latin_chinese-simplified-700.woff2') format('woff2');
+    font-weight: 700; /* 加粗 */
+    font-style: normal;
+    font-display: swap;
+}
+
+/* 2. 全局强制使用该字体（覆盖所有地方） */
+html, body, * {
+    font-family: "NotoSansSC", "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif !important;
+}
+
+/* 3. 保留等宽数字/代码字体（保持专业感） */
+.manual-input, .index-idx, .progress-num, .hud-giant-percentage {
+    font-family: "NotoSansSC", "JetBrains Mono", "Courier New", monospace !important;
+}
+
+
+
 /* ==========================================
    1. 高奢医疗科技（灰白空间）设计语言
    ========================================== */
@@ -247,23 +280,3 @@ footer {
     .nav-links, .vertical-progress-bar { display: none; }
     .screen { padding: 0 24px; }
 }
-/* ==========================================
-   全局字体统一补丁（跨平台一致性）
-   ========================================== */
-
-/* 1. 如果是 Windows 系统，强制使用微软雅黑 */
-@media screen and (min-width: 0\0) {
-    * { font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", Arial, sans-serif !important; }
-}
-
-/* 2. 如果是 Mac 系统，使用苹方（但为了完全一致，建议用下面的 @font-face） */
-@font-face {
-    font-family: 'LocalFallback';
-    src: local('Microsoft YaHei'), local('PingFang SC'), local('Helvetica Neue');
-}
-
-/* 3. 终极统一：如果下载了思源黑体，取消下面这行的注释 */
-/*
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap');
-* { font-family: 'Noto Sans SC', "Microsoft YaHei", "PingFang SC", sans-serif !important; }
-*/
