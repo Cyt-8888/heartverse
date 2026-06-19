@@ -63,7 +63,15 @@ body {
     transition: var(--transition-silk);
     
     /* 极致透明，无任何背景色或分割线 */
-    background: transparent !important;
+  /*background: transparent !important;*/
+  /* 核心：高级红白多级不透明度渐变（消隐流体设计） */
+background: linear-gradient(
+    to bottom,
+    rgba(212, 212, 212, 0.98) 0%,    /* 顶部：浓郁的时尚红，98%不透明度完美遮罩 */
+  
+    rgba(255, 255, 255, 0.00) 100% /* 终点：100%全透明，自然融入下方的纯白网页 */
+);
+
     
     /* 修复 Edge 警告：WebKit 前缀必须写在标准属性之前 */
     -webkit-backdrop-filter: none !important; 
@@ -239,3 +247,23 @@ footer {
     .nav-links, .vertical-progress-bar { display: none; }
     .screen { padding: 0 24px; }
 }
+/* ==========================================
+   全局字体统一补丁（跨平台一致性）
+   ========================================== */
+
+/* 1. 如果是 Windows 系统，强制使用微软雅黑 */
+@media screen and (min-width: 0\0) {
+    * { font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", Arial, sans-serif !important; }
+}
+
+/* 2. 如果是 Mac 系统，使用苹方（但为了完全一致，建议用下面的 @font-face） */
+@font-face {
+    font-family: 'LocalFallback';
+    src: local('Microsoft YaHei'), local('PingFang SC'), local('Helvetica Neue');
+}
+
+/* 3. 终极统一：如果下载了思源黑体，取消下面这行的注释 */
+/*
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap');
+* { font-family: 'Noto Sans SC', "Microsoft YaHei", "PingFang SC", sans-serif !important; }
+*/
